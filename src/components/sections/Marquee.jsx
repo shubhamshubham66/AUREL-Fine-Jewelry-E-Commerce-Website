@@ -1,33 +1,36 @@
-const STATEMENTS = [
-  'Handcrafted in Florence',
-  '18K Solid Gold',
-  'Certified Diamonds',
+const ITEMS = [
   'Free Worldwide Shipping',
+  'Certified Diamonds',
+  '18K Solid Gold',
   'Lifetime Warranty',
-  'Ethically Sourced',
-  'Made to Order',
-  'Bespoke Engravings',
+  'Hand-finished in Florence',
+  'Complimentary Engraving',
 ];
 
 export default function Marquee() {
-  return (
-    <div
-      className="relative overflow-hidden py-5 border-t border-b border-gold/10"
-      aria-label="Brand highlights marquee"
-    >
-      {/* Edge fades */}
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-obsidian to-transparent z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-obsidian to-transparent z-10" />
+  const row = ITEMS.map((item, i) => (
+    <span key={i} className="flex items-center gap-8 shrink-0">
+      <span className="text-cream/70 text-sm tracking-wide whitespace-nowrap font-light">
+        {item}
+      </span>
+      <span className="text-gold/60 text-xs">✦</span>
+    </span>
+  ));
 
-      <div className="animate-marquee flex whitespace-nowrap">
-        {[...STATEMENTS, ...STATEMENTS].map((text, idx) => (
-          <span key={idx} className="flex items-center mx-6 sm:mx-8">
-            <span className="text-cream/60 text-sm sm:text-base font-light tracking-wide">
-              {text}
-            </span>
-            <span className="ml-6 sm:ml-8 text-gold/60 text-xs">◆</span>
-          </span>
-        ))}
+  return (
+    <div className="relative border-y border-gold/15 bg-onyx/50 py-5 overflow-hidden">
+      {/* Edge Fades */}
+      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-obsidian to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-obsidian to-transparent z-10 pointer-events-none" />
+
+      {/* Scrolling Content */}
+      <div className="flex animate-marquee">
+        <div className="flex items-center gap-8 shrink-0 pr-8">
+          {row}
+        </div>
+        <div className="flex items-center gap-8 shrink-0 pr-8">
+          {row}
+        </div>
       </div>
     </div>
   );

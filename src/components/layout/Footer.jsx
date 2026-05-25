@@ -1,93 +1,111 @@
 import { motion } from 'framer-motion';
-import { FiInstagram, FiTwitter } from 'react-icons/fi';
+import { Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
 
-const links = {
-  Maison: ['About AUREL', 'Heritage', 'Sustainability', 'Press'],
+const footerLinks = {
   Collections: ['Rings', 'Necklaces', 'Earrings', 'Bracelets'],
-  Services: ['Bespoke Design', 'Engraving', 'Ring Sizing', 'Gift Cards'],
+  Services: ['Bespoke Design', 'Engraving', 'Ring Sizing', 'Gift Wrapping'],
   Care: ['Cleaning Guide', 'Warranty', 'Repairs', 'Insurance'],
+};
+
+const socialLinks = [
+  { icon: Instagram, label: 'Instagram' },
+  { icon: Facebook, label: 'Facebook' },
+  { icon: Youtube, label: 'Youtube' },
+  { icon: Twitter, label: 'Twitter' },
+];
+
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 export default function Footer() {
   return (
-    <footer className="pt-20 pb-10 bg-obsidian border-t border-cream/5" aria-label="Site footer">
-      <div className="container-luxe">
+    <footer className="border-t border-gold/10 bg-obsidian">
+      <div className="container-luxe py-20">
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
         >
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-gold font-serif text-2xl font-bold">A</span>
-              <span className="text-cream font-sans text-sm tracking-[0.3em] font-light">
-                AUREL
-              </span>
+          {/* Maison Column */}
+          <motion.div variants={itemVariants}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-full border border-gold/50 flex items-center justify-center">
+                <span className="text-gold font-serif text-sm">A</span>
+              </div>
+              <span className="font-serif text-cream text-lg tracking-[0.15em]">AUREL</span>
             </div>
-            <p className="text-cream/40 text-sm leading-relaxed max-w-xs">
-              Fine jewelry designed to outlive time. Handcrafted in Florence since 1987.
+            <p className="text-cream/50 text-sm leading-relaxed mb-6 max-w-xs">
+              Fine jewelry designed to outlive time. Hand-finished in Florence since 1987.
             </p>
-            <div className="flex gap-3 mt-4">
-              <a
-                href="#"
-                className="w-8 h-8 rounded-full border border-cream/10 flex items-center justify-center text-cream/50 hover:text-gold hover:border-gold/40 transition-all"
-                aria-label="Instagram"
-              >
-                <FiInstagram className="text-sm" />
-              </a>
-              <a
-                href="#"
-                className="w-8 h-8 rounded-full border border-cream/10 flex items-center justify-center text-cream/50 hover:text-gold hover:border-gold/40 transition-all"
-                aria-label="Twitter"
-              >
-                <FiTwitter className="text-sm" />
-              </a>
+            <div className="flex items-center gap-3">
+              {socialLinks.map(({ icon: Icon, label }) => (
+                <a
+                  key={label}
+                  href="#"
+                  aria-label={label}
+                  className="w-9 h-9 rounded-full border border-gold/20 flex items-center justify-center text-cream/50 hover:border-gold hover:text-gold transition-all duration-300"
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Link Columns */}
-          {Object.entries(links).map(([title, items]) => (
-            <div key={title}>
-              <h4 className="text-cream text-sm font-medium tracking-wide mb-4">{title}</h4>
-              <ul className="space-y-2.5">
-                {items.map((link) => (
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <motion.div key={title} variants={itemVariants}>
+              <h4 className="text-cream font-medium text-sm tracking-wide mb-5">{title}</h4>
+              <ul className="space-y-3">
+                {links.map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-cream/40 text-sm hover:text-gold transition-colors"
-                      aria-label={link}
+                      className="text-cream/50 text-sm hover:text-cream transition-colors duration-300"
                     >
                       {link}
                     </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
 
-        <div className="hairline mb-8" />
+        {/* Divider */}
+        <div className="hairline my-12" />
 
-        {/* Bottom */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-cream/30 text-xs">
-            &copy; {new Date().getFullYear()} AUREL Maison. All rights reserved.
+        {/* Bottom Row */}
+        <motion.div
+          className="flex flex-col sm:flex-row items-center justify-between gap-4"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <p className="text-cream/40 text-xs">
+            &copy; {new Date().getFullYear()} Maison AUREL. All rights reserved.
           </p>
-          <div className="flex gap-4 text-cream/30 text-xs">
-            <a href="#" className="hover:text-gold transition-colors" aria-label="Privacy policy">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-gold transition-colors" aria-label="Terms of service">
-              Terms
-            </a>
-            <a href="#" className="hover:text-gold transition-colors" aria-label="Cookie policy">
-              Cookies
-            </a>
+          <div className="flex items-center gap-6">
+            {['Privacy', 'Terms', 'Cookies'].map((link) => (
+              <a
+                key={link}
+                href="#"
+                className="text-cream/40 text-xs hover:text-cream/70 transition-colors"
+              >
+                {link}
+              </a>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Giant Wordmark */}
         <motion.div
@@ -95,13 +113,15 @@ export default function Footer() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 1, delay: 0.5 }}
         >
           <span
-            className="text-[6rem] sm:text-[8rem] md:text-[10rem] lg:text-[12rem] font-serif font-bold leading-none select-none"
+            className="font-serif font-light select-none pointer-events-none"
             style={{
-              WebkitTextStroke: '1px rgba(212, 175, 55, 0.1)',
+              fontSize: 'clamp(80px, 18vw, 260px)',
+              WebkitTextStroke: '1px rgba(212,175,55,0.18)',
               WebkitTextFillColor: 'transparent',
+              lineHeight: 0.85,
             }}
           >
             AUREL

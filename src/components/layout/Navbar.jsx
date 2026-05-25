@@ -1,152 +1,158 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX } from 'react-icons/fi';
+import { Search, User, ShoppingBag, Menu, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext.jsx';
-import { useAuth } from '../../context/AuthContext.jsx';
 
-const NAV_LINKS = ['Collections', 'Shop', 'Craft', 'Story', 'Journal'];
+const NAV_LINKS = [
+  { label: 'Collections', href: '#collections' },
+  { label: 'Shop', href: '#shop' },
+  { label: 'Craft', href: '#craft' },
+  { label: 'Story', href: '#story' },
+  { label: 'Journal', href: '#journal' },
+];
 
 export default function Navbar({ onSearchOpen, onAuthOpen }) {
-  const { open, totals } = useCart();
-  const { isAuthenticated, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [userDropdown, setUserDropdown] = useState(false);
+  const { open, totals } = useCart();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'glass-strong py-3' : 'py-5 bg-transparent'
-      }`}
-      aria-label="Main navigation"
-    >
-      <div className="container-luxe flex items-center justify-between">
-        {/* Logo */}
-        <a href="#" className="flex items-center gap-2" aria-label="AUREL home">
-          <span className="text-gold font-serif text-2xl font-bold">A</span>
-          <span className="text-cream font-sans text-sm tracking-[0.3em] font-light hidden sm:inline">
-            AUREL
-          </span>
-        </a>
+    <>
+      <motion.header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'glass-strong border-b border-gold/10'
+            : 'bg-transparent'
+        }`}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.7, delay: 0.2 }}
+      >
+        <div className="container-luxe flex items-center justify-between h-16 md:h-20">
+          {/* Logo */}
+          <a href="#" className="flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-full border border-gold/50 flex items-center justify-center group-hover:border-gold transition-colors duration-300">
+              <span className="text-gold font-serif text-sm">A</span>
+            </div>
+            <span className="font-serif text-cream text-lg tracking-[0.15em] hidden sm:block">
+              AUREL
+            </span>
+          </a>
 
-        {/* Desktop Links */}
-        <div className="hidden lg:flex items-center gap-8">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
-              className="text-cream/70 text-sm font-light tracking-wide hover:text-gold transition-colors duration-300"
-              aria-label={link}
-            >
-              {link}
-            </a>
-          ))}
-        </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-8">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="group relative text-cream/70 hover:text-cream text-sm tracking-wide transition-colors duration-300"
+              >
+                {link.label}
+                <span className="absolute -bottom-1 left-0 h-px w-0 bg-gold group-hover:w-full transition-all duration-300" />
+              </a>
+            ))}
+          </nav>
 
-        {/* Icons */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onSearchOpen}
-            className="text-cream/70 hover:text-gold transition-colors"
-            aria-label="Open search"
-          >
-            <FiSearch className="text-lg" />
-          </button>
-
-          {/* User */}
-          <div className="relative">
+          {/* Right Actions */}
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => {
-                if (isAuthenticated) setUserDropdown(!userDropdown);
-                else onAuthOpen?.();
-              }}
-              className="text-cream/70 hover:text-gold transition-colors"
-              aria-label={isAuthenticated ? 'User menu' : 'Open login'}
+              onClick={onSearchOpen}
+              className="w-10 h-10 flex items-center justify-center text-cream/60 hover:text-cream transition-colors"
+              aria-label="Search"
             >
-              <FiUser className="text-lg" />
+              <Search className="w-[18px] h-[18px]" />
             </button>
-            <AnimatePresence>
-              {userDropdown && isAuthenticated && (
-                <motion.div
-                  className="absolute right-0 top-full mt-2 w-48 glass-strong rounded-lg p-3"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
+            <button
+              onClick={onAuthOpen}
+              className="w-10 h-10 flex items-center justify-center text-cream/60 hover:text-cream transition-colors"
+              aria-label="Account"
+            >
+              <User className="w-[18px] h-[18px]" />
+            </button>
+            <button
+              onClick={open}
+              className="relative w-10 h-10 flex items-center justify-center text-cream/60 hover:text-cream transition-colors"
+              aria-label="Cart"
+            >
+              <ShoppingBag className="w-[18px] h-[18px]" />
+              {totals.count > 0 && (
+                <motion.span
+                  className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold text-obsidian text-[10px] font-bold flex items-center justify-center rounded-full"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  key={totals.count}
                 >
-                  <p className="text-cream text-sm font-medium truncate">{user?.name}</p>
-                  <p className="text-cream/40 text-xs truncate mb-2">{user?.email}</p>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setUserDropdown(false);
-                    }}
-                    className="w-full text-left text-red-400 text-xs hover:text-red-300 transition-colors"
-                    aria-label="Logout"
-                  >
-                    Sign Out
-                  </button>
-                </motion.div>
+                  {totals.count}
+                </motion.span>
               )}
-            </AnimatePresence>
+            </button>
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="w-10 h-10 flex items-center justify-center text-cream/60 hover:text-cream transition-colors lg:hidden"
+              aria-label="Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
-
-          {/* Cart */}
-          <button
-            onClick={open}
-            className="relative text-cream/70 hover:text-gold transition-colors"
-            aria-label={`Open cart with ${totals.count} items`}
-          >
-            <FiShoppingBag className="text-lg" />
-            {totals.count > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-obsidian text-[10px] font-bold rounded-full flex items-center justify-center">
-                {totals.count}
-              </span>
-            )}
-          </button>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden text-cream/70 hover:text-gold transition-colors"
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          >
-            {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
-          </button>
         </div>
-      </div>
+      </motion.header>
 
-      {/* Mobile Menu */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            className="lg:hidden absolute top-full left-0 right-0 glass-strong border-t border-cream/5"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="container-luxe py-6 flex flex-col gap-4">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-cream/80 text-lg font-light tracking-wide hover:text-gold transition-colors"
-                  aria-label={link}
+          <>
+            <motion.div
+              className="fixed inset-0 bg-obsidian/80 backdrop-blur-sm z-[60]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              className="fixed top-0 right-0 bottom-0 w-72 bg-onyx border-l border-gold/10 z-[70] p-8 flex flex-col"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            >
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="self-end mb-8 text-cream/60 hover:text-cream"
+                aria-label="Close menu"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <nav className="flex flex-col gap-6">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-cream/80 hover:text-cream font-serif text-xl tracking-wide transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="mt-auto pt-8 border-t border-gold/10">
+                <button
+                  onClick={() => { onSearchOpen(); setMobileOpen(false); }}
+                  className="flex items-center gap-3 text-cream/60 hover:text-cream text-sm"
                 >
-                  {link}
-                </a>
-              ))}
-            </div>
-          </motion.div>
+                  <Search className="w-4 h-4" /> Search
+                </button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 }

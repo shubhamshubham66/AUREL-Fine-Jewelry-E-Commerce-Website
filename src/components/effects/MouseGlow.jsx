@@ -1,58 +1,83 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function MouseGlow() {
-  const glowRef = useRef(null);
-  const position = useRef({ x: 0, y: 0 });
-  const target = useRef({ x: 0, y: 0 });
-  const rafId = useRef(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const primaryRef = useRef(null);
+  const secondaryRef = useRef(null);
+  const mousePos = useRef({ x: 0, y: 0 });
+  const primaryPos = useRef({ x: 0, y: 0 });
+  const secondaryPos = useRef({ x: 0, y: 0 });
+  const rafRef = useRef(null);
 
   useEffect(() => {
-    const mq = window.matchMedia('(pointer: fine)');
-    setIsDesktop(mq.matches);
-    const handler = (e) => setIsDesktop(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+    // Skip on touch devices
+    if (window.matchMedia('(pointer: coarse)').matches) return;
 
-  useEffect(() => {
-    if (!isDesktop) return;
-
-    const handleMouse = (e) => {
-      target.current = { x: e.clientX, y: e.clientY };
+    const handleMouseMove = (e) => {
+      mousePos.current = { x: e.clientX, y: e.clientY };
     };
 
     const animate = () => {
-      position.current.x += (target.current.x - position.current.x) * 0.08;
-      position.current.y += (target.current.y - position.current.y) * 0.08;
+      // Primary: faster follow (easing 0.14)
+      primaryPos.current.x += (mousePos.current.x - primaryPos.current.x) * 0.14;
+      primaryPos.current.y += (mousePos.current.y - primaryPos.current.y) * 0.14;
 
-      if (glowRef.current) {
-        glowRef.current.style.transform = `translate(${position.current.x - 150}px, ${position.current.y - 150}px)`;
+      // Secondary: slower trailing (easing 0.06)
+      secondaryPos.current.x += (mousePos.current.x - secondaryPos.current.x) * 0.06;
+      secondaryPos.current.y += (mousePos.current.y - secondaryPos.current.y) * 0.06;
+
+      if (primaryRef.current) {
+        primaryRef.current.style.transform = `translate(${primaryPos.current.x - 200}px, ${primaryPos.current.y - 200}px)`;
       }
-      rafId.current = requestAnimationFrame(animate);
+      if (secondaryRef.current) {
+        secondaryRef.current.style.transform = `translate(${secondaryPos.current.x - 300}px, ${secondaryPos.current.y - 300}px)`;
+      }
+
+      rafRef.current = requestAnimationFrame(animate);
     };
 
-    window.addEventListener('mousemove', handleMouse, { passive: true });
-    rafId.current = requestAnimationFrame(animate);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    rafRef.current = requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouse);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isDesktop]);
+  }, []);
 
-  if (!isDesktop) return null;
+  // Don't render on touch devices
+  if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
+    return null;
+  }
 
   return (
-    <div
-      ref={glowRef}
-      className="fixed top-0 left-0 w-[300px] h-[300px] pointer-events-none z-[9999]"
-      style={{
-        background: 'radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%)',
-        opacity: 0.18,
-        willChange: 'transform',
-      }}
-      aria-hidden="true"
-    />
+    <>
+      {/* Primary Glow - faster, smaller */}
+      <div
+        ref={primaryRef}
+        className="fixed top-0 left-0 pointer-events-none z-[9999]"
+        style={{
+          width: 400,
+          height: 400,
+          background: 'radial-gradient(circle, rgba(212,175,55,0.18) 0%, transparent 60%)',
+          filter: 'blur(30px)',
+          mixBlendMode: 'screen',
+          willChange: 'transform',
+        }}
+      />
+
+      {/* Secondary Glow - slower, larger */}
+      <div
+        ref={secondaryRef}
+        className="fixed top-0 left-0 pointer-events-none z-[9998]"
+        style={{
+          width: 600,
+          height: 600,
+          background: 'radial-gradient(circle, rgba(212,175,55,0.06) 0%, rgba(183,110,121,0.04) 40%, transparent 70%)',
+          filter: 'blur(60px)',
+          mixBlendMode: 'screen',
+          willChange: 'transform',
+        }}
+      />
+    </>
   );
 }
