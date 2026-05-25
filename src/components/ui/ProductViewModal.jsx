@@ -74,11 +74,16 @@ export default function ProductViewModal({ product, onClose }) {
 
             <div className="grid md:grid-cols-2 gap-0">
               {/* 3D Viewer */}
-              <div className="h-64 sm:h-80 md:h-[500px] bg-onyx/50 rounded-t-xl md:rounded-l-xl md:rounded-tr-none">
+              <div className="relative h-72 sm:h-80 md:h-[520px] bg-gradient-to-b from-onyx/80 to-obsidian/90 rounded-t-xl md:rounded-l-xl md:rounded-tr-none overflow-hidden">
+                {/* Decorative gold radial glow behind the 3D object */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
+                </div>
                 <Suspense
                   fallback={
-                    <div className="flex items-center justify-center w-full h-full">
-                      <div className="w-12 h-12 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                    <div className="flex flex-col items-center justify-center w-full h-full gap-3">
+                      <div className="w-14 h-14 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                      <span className="text-[10px] uppercase tracking-widest text-cream/40">Loading 3D View</span>
                     </div>
                   }
                 >
