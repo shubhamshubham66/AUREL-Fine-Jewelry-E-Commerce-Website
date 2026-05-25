@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, CheckCircle } from 'lucide-react';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
@@ -8,57 +7,61 @@ export default function Newsletter() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (email.includes('@')) {
+    if (email.trim()) {
       setSubmitted(true);
       setEmail('');
     }
   };
 
   return (
-    <section className="section bg-obsidian relative overflow-hidden">
-      <div className="absolute inset-0 bg-radial-gold opacity-20" />
-      <div className="container-luxe relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8 }}
-          className="max-w-2xl mx-auto text-center"
-        >
-          <span className="eyebrow justify-center">Exclusive Access</span>
-          <h2 className="h-display mt-4 text-cream">
-            Join the <span className="text-gold-gradient">Inner Circle</span>
-          </h2>
-          <p className="mt-4 text-cream/50 text-lg font-light">
-            Be the first to discover new collections, private events, and limited editions.
-          </p>
+    <section className="section" aria-label="Newsletter signup">
+      <div className="container-luxe">
+        <div className="relative rounded-xl glass p-8 sm:p-12 md:p-16 overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-gold/5 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-gold/5 blur-3xl" />
 
-          {submitted ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-8 flex items-center justify-center gap-3 text-gold"
-            >
-              <CheckCircle size={20} />
-              <span className="font-serif text-lg">Welcome to AUREL.</span>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} className="mt-8 flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 w-full px-5 py-3 bg-onyx/60 border border-gold/20 rounded-sm text-cream placeholder-cream/30 focus:outline-none focus:border-gold/60 transition-colors duration-300"
-                required
-              />
-              <button type="submit" className="btn-gold flex items-center gap-2 whitespace-nowrap">
-                <Send size={16} />
-                Subscribe
-              </button>
-            </form>
-          )}
-        </motion.div>
+          <div className="relative z-10 max-w-xl mx-auto text-center">
+            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-cream mb-3">
+              Join the <span className="text-gold-gradient">Inner Circle</span>
+            </h2>
+            <p className="text-cream/50 text-sm sm:text-base mb-8">
+              Receive early access to new collections, private events, and exclusive offers.
+            </p>
+
+            {submitted ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="py-4"
+              >
+                <p className="text-gold font-serif text-xl">Welcome to AUREL</p>
+                <p className="text-cream/50 text-sm mt-1">
+                  Check your inbox for a welcome surprise.
+                </p>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  className="flex-1 px-5 py-3 bg-onyx/60 border border-cream/10 rounded-sm text-cream placeholder-cream/30 focus:outline-none focus:border-gold/40 transition-colors"
+                  aria-label="Email for newsletter"
+                />
+                <button
+                  type="submit"
+                  className="btn-gold whitespace-nowrap"
+                  aria-label="Subscribe to newsletter"
+                >
+                  Subscribe
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -1,25 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X } from 'lucide-react';
+import { FiSearch, FiX } from 'react-icons/fi';
 import { PRODUCTS } from '../../data/products.js';
 import { formatPrice } from '../../utils/format.js';
+
+const POPULAR_SEARCHES = ['Rings', 'Necklaces', 'Diamond', 'Gold', 'Earrings', 'Bracelets'];
 
 export default function SearchOverlay({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-      setQuery('');
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current.focus(), 100);
     }
+    if (!isOpen) setQuery('');
   }, [isOpen]);
 
-  const results = query.length > 1
-    ? PRODUCTS.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase())
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const results = query.trim()
+    ? PRODUCTS.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query.toLowerCase()) ||
+          p.category.toLowerCase().includes(query.toLowerCase()) ||
+          p.description.toLowerCase().includes(query.toLowerCase())
       )
     : [];
 
@@ -27,76 +38,105 @@ export default function SearchOverlay({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          className="fixed inset-0 z-[70] flex flex-col"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[90] flex items-start justify-center pt-20 md:pt-32 p-4"
+          transition={{ duration: 0.25 }}
         >
-          <div
-            className="absolute inset-0 bg-obsidian/95 backdrop-blur-md"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ y: -30, opacity: 0, scale: 0.95 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -30, opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-2xl glass-strong rounded-sm overflow-hidden"
-          >
-            {/* Search input */}
-            <div className="flex items-center gap-4 p-5 border-b border-gold/10">
-              <Search size={20} className="text-gold/60" />
+          <div className="absolute inset-0 bg-obsidian/90 backdrop-blur-xl" onClick={onClose} />
+
+          <div className="relative z-10 w-full max-w-3xl mx-auto mt-20 sm:mt-28 px-4">
+            {/* Search Input */}
+            <div className="relative">
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/60 text-xl" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search jewelry..."
-                className="flex-1 bg-transparent text-cream text-lg placeholder-cream/30 focus:outline-none font-light"
+                className="w-full pl-12 pr-12 py-4 bg-onyx/80 border border-gold/20 rounded-lg text-cream placeholder-cream/40 text-lg focus:outline-none focus:border-gold/50 transition-colors"
+                aria-label="Search jewelry products"
               />
-              <button onClick={onClose} className="p-2 text-cream/50 hover:text-gold transition-colors">
-                <X size={20} />
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-cream/50 hover:text-gold transition-colors"
+                aria-label="Close search"
+              >
+                <FiX className="text-xl" />
               </button>
             </div>
 
-            {/* Results */}
-            <div className="max-h-96 overflow-y-auto">
-              {query.length > 1 && results.length === 0 && (
-                <div className="p-8 text-center">
-                  <p className="text-cream/50 font-serif text-lg">No pieces found</p>
-                  <p className="text-cream/30 text-sm mt-2">Try a different search term</p>
+            {/* Popular Searches */}
+            {!query.trim() && (
+              <motion.div
+                className="mt-6"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <p className="text-cream/40 text-xs uppercase tracking-widest mb-3">
+                  Popular Searches
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_SEARCHES.map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => setQuery(term)}
+                      className="px-4 py-2 rounded-full border border-gold/20 text-cream/70 text-sm hover:border-gold/50 hover:text-gold transition-all"
+                      aria-label={`Search for ${term}`}
+                    >
+                      {term}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </motion.div>
+            )}
 
-              {results.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={onClose}
-                  className="flex items-center gap-4 p-4 hover:bg-gold/5 cursor-pointer transition-colors duration-200 border-b border-gold/5 last:border-b-0"
-                >
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-14 h-14 object-cover rounded-sm"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-cream font-serif truncate">{product.name}</p>
-                    <p className="text-xs text-cream/40 mt-0.5">{product.category}</p>
+            {/* Results */}
+            {query.trim() && (
+              <div className="mt-4">
+                <p className="text-cream/40 text-xs uppercase tracking-widest mb-3">
+                  {results.length} result{results.length !== 1 ? 's' : ''} found
+                </p>
+                {results.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1">
+                    {results.map((product) => (
+                      <motion.button
+                        key={product.id}
+                        onClick={onClose}
+                        className="flex items-center gap-4 p-3 rounded-lg bg-onyx/60 border border-cream/5 hover:border-gold/30 transition-all text-left group"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        aria-label={`View ${product.name}`}
+                      >
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-16 h-16 rounded-md object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-cream font-medium text-sm truncate group-hover:text-gold transition-colors">
+                            {product.name}
+                          </p>
+                          <p className="text-cream/40 text-xs">{product.category}</p>
+                          <p className="text-gold text-sm mt-0.5">{formatPrice(product.price)}</p>
+                        </div>
+                      </motion.button>
+                    ))}
                   </div>
-                  <p className="text-gold font-semibold text-sm">{formatPrice(product.price)}</p>
-                </motion.div>
-              ))}
-            </div>
-
-            {query.length <= 1 && (
-              <div className="p-6 text-center">
-                <p className="text-cream/30 text-sm">Start typing to search our collection</p>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-cream/50 text-lg">No results found</p>
+                    <p className="text-cream/30 text-sm mt-1">
+                      Try searching for rings, necklaces, or earrings
+                    </p>
+                  </div>
+                )}
               </div>
             )}
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

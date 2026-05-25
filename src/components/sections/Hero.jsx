@@ -1,77 +1,77 @@
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDown } from 'lucide-react';
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.15, delayChildren: 0.3 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 40, rotateX: 15 },
+  show: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.8, ease: 'easeOut' } },
+};
 
 export default function Hero() {
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const handler = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
-
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
-      {/* Parallax background */}
+    <section className="relative h-screen flex items-center overflow-hidden" aria-label="Hero section">
+      {/* Background */}
       <div
-        className="absolute inset-0 bg-cover bg-center will-change-transform"
+        className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1920&q=80)',
-          transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
+          backgroundImage:
+            'url(https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1920&q=80)',
+          backgroundAttachment: 'fixed',
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-obsidian/70 via-obsidian/50 to-obsidian" />
-      <div className="absolute inset-0 bg-radial-gold opacity-40" />
+      {/* Gradients */}
+      <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/70 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-obsidian/80 to-transparent" />
+      <div className="absolute inset-0 bg-radial-gold opacity-30" />
 
       {/* Content */}
-      <div className="relative z-10 text-center px-4 perspective-1200">
-        <motion.div
-          initial={{ opacity: 0, rotateX: 15, y: 60 }}
-          animate={{ opacity: 1, rotateX: 0, y: 0 }}
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="preserve-3d"
-        >
-          <span className="eyebrow mb-6 justify-center">Est. 2024</span>
-          <h1 className="h-display text-cream mt-6">
-            Jewelry Designed to
-            <br />
-            <span className="text-gold-gradient">Outlive Time</span>
-          </h1>
-          <p className="mt-6 max-w-xl mx-auto text-cream/60 text-lg font-light leading-relaxed">
-            Each piece in the AUREL collection is handcrafted from ethically sourced diamonds and precious metals — a testament to heritage, patience, and enduring beauty.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <a href="#collections" className="btn-gold">
-            Explore Collection
-          </a>
-          <a href="#story" className="btn-outline-gold">
-            Our Story
-          </a>
-        </motion.div>
-      </div>
-
-      {/* Scroll indicator */}
       <motion.div
+        className="relative z-10 container-luxe perspective-1200"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        <div className="max-w-2xl preserve-3d">
+          <motion.p className="eyebrow mb-4" variants={item}>
+            Fine Jewelry Since 1987
+          </motion.p>
+          <motion.h1 className="h-display text-cream mb-6" variants={item}>
+            Designed to <span className="text-gold-gradient">Outlive</span> Time
+          </motion.h1>
+          <motion.p
+            className="text-cream/60 text-base sm:text-lg leading-relaxed max-w-lg mb-8"
+            variants={item}
+          >
+            Handcrafted luxury in 18K gold with certified diamonds. Each piece is a legacy,
+            meticulously forged by master artisans in our Florence atelier.
+          </motion.p>
+          <motion.div className="flex flex-wrap gap-4" variants={item}>
+            <a href="#shop" className="btn-gold" aria-label="Explore collection">
+              Explore Collection
+            </a>
+            <a href="#story" className="btn-outline-gold" aria-label="Our story">
+              Our Story
+            </a>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
       >
+        <span className="text-cream/40 text-xs tracking-widest uppercase">Scroll</span>
         <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-gold/60"
-        >
-          <ArrowDown size={20} />
-        </motion.div>
+          className="w-px h-8 bg-gold/50"
+          animate={{ scaleY: [1, 1.5, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
       </motion.div>
     </section>
   );

@@ -1,18 +1,34 @@
-import { motion } from 'framer-motion';
+const STATEMENTS = [
+  'Handcrafted in Florence',
+  '18K Solid Gold',
+  'Certified Diamonds',
+  'Free Worldwide Shipping',
+  'Lifetime Warranty',
+  'Ethically Sourced',
+  'Made to Order',
+  'Bespoke Engravings',
+];
 
 export default function Marquee() {
-  const items = ['18K Gold', 'VVS Diamonds', 'Handcrafted', 'Ethically Sourced', 'Limited Editions', 'Lifetime Warranty', 'Bespoke Design', 'Heritage Craft'];
-
   return (
-    <section className="py-6 border-y border-gold/10 overflow-hidden bg-onyx/50">
-      <div className="flex animate-marquee whitespace-nowrap">
-        {[...items, ...items].map((item, i) => (
-          <span key={i} className="mx-8 text-sm md:text-base text-cream/40 font-serif italic tracking-wide flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold/50" />
-            {item}
+    <div
+      className="relative overflow-hidden py-5 border-t border-b border-gold/10"
+      aria-label="Brand highlights marquee"
+    >
+      {/* Edge fades */}
+      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-obsidian to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-obsidian to-transparent z-10" />
+
+      <div className="animate-marquee flex whitespace-nowrap">
+        {[...STATEMENTS, ...STATEMENTS].map((text, idx) => (
+          <span key={idx} className="flex items-center mx-6 sm:mx-8">
+            <span className="text-cream/60 text-sm sm:text-base font-light tracking-wide">
+              {text}
+            </span>
+            <span className="ml-6 sm:ml-8 text-gold/60 text-xs">◆</span>
           </span>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

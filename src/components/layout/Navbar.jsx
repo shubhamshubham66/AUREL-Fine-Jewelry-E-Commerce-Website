@@ -1,111 +1,152 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingBag, Menu, X } from 'lucide-react';
+import { FiSearch, FiUser, FiShoppingBag, FiMenu, FiX } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
-export default function Navbar({ onSearchOpen }) {
+const NAV_LINKS = ['Collections', 'Shop', 'Craft', 'Story', 'Journal'];
+
+export default function Navbar({ onSearchOpen, onAuthOpen }) {
+  const { open, totals } = useCart();
+  const { isAuthenticated, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { open, totals } = useCart();
+  const [userDropdown, setUserDropdown] = useState(false);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const links = ['Collections', 'Craftsmanship', 'Story', 'Contact'];
-
   return (
-    <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? 'glass-strong py-3' : 'py-5 bg-transparent'
-        }`}
-      >
-        <div className="container-luxe flex items-center justify-between">
-          <a href="#" className="font-serif text-2xl md:text-3xl text-gold-gradient tracking-[0.15em]">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled ? 'glass-strong py-3' : 'py-5 bg-transparent'
+      }`}
+      aria-label="Main navigation"
+    >
+      <div className="container-luxe flex items-center justify-between">
+        {/* Logo */}
+        <a href="#" className="flex items-center gap-2" aria-label="AUREL home">
+          <span className="text-gold font-serif text-2xl font-bold">A</span>
+          <span className="text-cream font-sans text-sm tracking-[0.3em] font-light hidden sm:inline">
             AUREL
-          </a>
+          </span>
+        </a>
 
-          <nav className="hidden md:flex items-center gap-8">
-            {links.map(link => (
-              <a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                className="text-sm text-cream/70 hover:text-gold transition-colors duration-300 tracking-wide"
-              >
-                {link}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onSearchOpen}
-              className="p-2 text-cream/70 hover:text-gold transition-colors"
-              aria-label="Search"
+        {/* Desktop Links */}
+        <div className="hidden lg:flex items-center gap-8">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link}
+              href={`#${link.toLowerCase()}`}
+              className="text-cream/70 text-sm font-light tracking-wide hover:text-gold transition-colors duration-300"
+              aria-label={link}
             >
-              <Search size={20} />
-            </button>
-
-            <button
-              onClick={open}
-              className="relative p-2 text-cream/70 hover:text-gold transition-colors"
-              aria-label="Cart"
-            >
-              <ShoppingBag size={20} />
-              {totals.count > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-obsidian text-xs font-bold rounded-full flex items-center justify-center">
-                  {totals.count}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="p-2 text-cream/70 hover:text-gold transition-colors md:hidden"
-              aria-label="Menu"
-            >
-              <Menu size={22} />
-            </button>
-          </div>
+              {link}
+            </a>
+          ))}
         </div>
-      </motion.header>
 
+        {/* Icons */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onSearchOpen}
+            className="text-cream/70 hover:text-gold transition-colors"
+            aria-label="Open search"
+          >
+            <FiSearch className="text-lg" />
+          </button>
+
+          {/* User */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (isAuthenticated) setUserDropdown(!userDropdown);
+                else onAuthOpen?.();
+              }}
+              className="text-cream/70 hover:text-gold transition-colors"
+              aria-label={isAuthenticated ? 'User menu' : 'Open login'}
+            >
+              <FiUser className="text-lg" />
+            </button>
+            <AnimatePresence>
+              {userDropdown && isAuthenticated && (
+                <motion.div
+                  className="absolute right-0 top-full mt-2 w-48 glass-strong rounded-lg p-3"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                >
+                  <p className="text-cream text-sm font-medium truncate">{user?.name}</p>
+                  <p className="text-cream/40 text-xs truncate mb-2">{user?.email}</p>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setUserDropdown(false);
+                    }}
+                    className="w-full text-left text-red-400 text-xs hover:text-red-300 transition-colors"
+                    aria-label="Logout"
+                  >
+                    Sign Out
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Cart */}
+          <button
+            onClick={open}
+            className="relative text-cream/70 hover:text-gold transition-colors"
+            aria-label={`Open cart with ${totals.count} items`}
+          >
+            <FiShoppingBag className="text-lg" />
+            {totals.count > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gold text-obsidian text-[10px] font-bold rounded-full flex items-center justify-center">
+                {totals.count}
+              </span>
+            )}
+          </button>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="lg:hidden text-cream/70 hover:text-gold transition-colors"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          >
+            {mobileOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-obsidian/98 flex flex-col items-center justify-center gap-8"
+            className="lg:hidden absolute top-full left-0 right-0 glass-strong border-t border-cream/5"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-6 right-6 text-cream/70 hover:text-gold"
-            >
-              <X size={28} />
-            </button>
-            {links.map((link, i) => (
-              <motion.a
-                key={link}
-                href={`#${link.toLowerCase()}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                onClick={() => setMobileOpen(false)}
-                className="font-serif text-3xl text-cream hover:text-gold transition-colors"
-              >
-                {link}
-              </motion.a>
-            ))}
+            <div className="container-luxe py-6 flex flex-col gap-4">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link}
+                  href={`#${link.toLowerCase()}`}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-cream/80 text-lg font-light tracking-wide hover:text-gold transition-colors"
+                  aria-label={link}
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </nav>
   );
 }

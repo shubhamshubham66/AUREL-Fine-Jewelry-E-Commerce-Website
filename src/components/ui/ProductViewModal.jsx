@@ -1,27 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RotateCcw, ShoppingBag, Minus, Plus } from 'lucide-react';
-import { KARATS, DIAMOND_SIZES, METAL_COLORS } from '../../data/products.js';
 import { useCart } from '../../context/CartContext.jsx';
 import { formatPrice } from '../../utils/format.js';
+import { KARATS, DIAMOND_SIZES, METAL_COLORS } from '../../data/products.js';
+
+const JewelryViewer3D = lazy(() => import('./JewelryViewer3D.jsx'));
+
+const KARAT_MULTIPLIER = { '14K': 1.0, '18K': 1.3, '22K': 1.7 };
+const DIAMOND_MULTIPLIER = { '0.25 ct': 1.0, '0.50 ct': 1.4, '0.75 ct': 1.8, '1.00 ct': 2.3 };
 
 export default function ProductViewModal({ product, onClose }) {
-  const [rotation, setRotation] = useState(0);
-  const [selectedKarat, setSelectedKarat] = useState('18K');
-  const [selectedSize, setSelectedSize] = useState('0.50 ct');
-  const [selectedMetal, setSelectedMetal] = useState('yellow');
-  const [qty, setQty] = useState(1);
   const { addItem } = useCart();
+  const [karat, setKarat] = useState('18K');
+  const [diamond, setDiamond] = useState('0.50 ct');
+  const [metal, setMetal] = useState(METAL_COLORS[0]);
+  const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
 
   if (!product) return null;
 
-  const handleAdd = () => {
+  const calculatedPrice = Math.round(
+    product.price * KARAT_MULTIPLIER[karat] * DIAMOND_MULTIPLIER[diamond]
+  );
+
+  const handleAddToCart = () => {
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
       image: product.image,
+      price: calculatedPrice,
       qty,
+      config: { karat, diamond, metal: metal.name },
     });
     onClose();
   };
@@ -30,102 +46,76 @@ export default function ProductViewModal({ product, onClose }) {
     <AnimatePresence>
       {product && (
         <motion.div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4"
-          onClick={onClose}
+          transition={{ duration: 0.3 }}
         >
-          <div className="absolute inset-0 bg-obsidian/90 backdrop-blur-sm" />
+          <div
+            className="absolute inset-0 bg-obsidian/80 backdrop-blur-md"
+            onClick={onClose}
+            aria-label="Close modal backdrop"
+          />
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 30 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 30 }}
+            className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl glass-strong"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative glass-strong rounded-sm max-w-4xl w-full max-h-[90vh] overflow-y-auto"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-cream/60 hover:text-gold transition-colors z-10"
+              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-onyx/80 text-cream hover:text-gold transition-colors"
+              aria-label="Close product modal"
             >
-              <X size={24} />
+              ✕
             </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="grid md:grid-cols-2 gap-0">
               {/* 3D Viewer */}
-              <div className="relative aspect-square bg-onyx/50 flex items-center justify-center overflow-hidden">
-                <motion.img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-4/5 h-4/5 object-cover rounded-sm"
-                  style={{ transform: `rotateY(${rotation}deg)` }}
-                  transition={{ duration: 0.5 }}
-                />
-                <div className="absolute bottom-4 left-4 flex gap-2">
-                  <button
-                    onClick={() => setRotation(r => r - 45)}
-                    className="p-2 glass rounded-full text-gold hover:bg-gold/20 transition-colors"
-                    aria-label="Rotate left"
-                  >
-                    <RotateCcw size={16} />
-                  </button>
-                  <button
-                    onClick={() => setRotation(r => r + 45)}
-                    className="p-2 glass rounded-full text-gold hover:bg-gold/20 transition-colors"
-                    aria-label="Rotate right"
-                  >
-                    <RotateCcw size={16} className="scale-x-[-1]" />
-                  </button>
-                </div>
-                {product.badge && (
-                  <span className="absolute top-4 left-4 px-3 py-1 text-xs font-semibold bg-gold text-obsidian rounded-sm">
-                    {product.badge}
-                  </span>
-                )}
+              <div className="h-64 sm:h-80 md:h-[500px] bg-onyx/50 rounded-t-xl md:rounded-l-xl md:rounded-tr-none">
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center w-full h-full">
+                      <div className="w-12 h-12 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                    </div>
+                  }
+                >
+                  <JewelryViewer3D metalColor={metal.hex} />
+                </Suspense>
               </div>
 
               {/* Configurator */}
-              <div className="p-8 md:p-10 flex flex-col">
-                <p className="text-xs text-gold/60 uppercase tracking-wider">{product.category}</p>
-                <h2 className="font-serif text-3xl text-cream mt-2">{product.name}</h2>
-                <p className="text-2xl text-gold font-semibold mt-3">{formatPrice(product.price)}</p>
-                <p className="mt-4 text-cream/60 text-sm leading-relaxed">{product.description}</p>
-
-                <div className="hairline my-6" />
-
-                {/* Metal Color */}
-                <div className="mb-5">
-                  <label className="text-xs text-cream/50 uppercase tracking-wider block mb-3">Metal</label>
-                  <div className="flex gap-3">
-                    {METAL_COLORS.map(m => (
-                      <button
-                        key={m.id}
-                        onClick={() => setSelectedMetal(m.id)}
-                        className={`w-8 h-8 rounded-full border-2 transition-all duration-300 ${
-                          selectedMetal === m.id ? 'border-gold scale-110' : 'border-transparent'
-                        }`}
-                        style={{ backgroundColor: m.hex }}
-                        aria-label={m.name}
-                        title={m.name}
-                      />
-                    ))}
-                  </div>
+              <div className="p-6 sm:p-8 flex flex-col gap-5">
+                <div>
+                  <p className="text-gold/70 text-xs uppercase tracking-widest mb-1">
+                    {product.category}
+                  </p>
+                  <h2 className="font-serif text-2xl sm:text-3xl text-cream font-light">
+                    {product.name}
+                  </h2>
+                  <p className="text-cream/60 text-sm mt-2 leading-relaxed">
+                    {product.description}
+                  </p>
                 </div>
 
                 {/* Karat */}
-                <div className="mb-5">
-                  <label className="text-xs text-cream/50 uppercase tracking-wider block mb-3">Karat</label>
+                <div>
+                  <label className="text-xs uppercase tracking-widest text-cream/50 mb-2 block">
+                    Gold Karat
+                  </label>
                   <div className="flex gap-2">
-                    {KARATS.map(k => (
+                    {KARATS.map((k) => (
                       <button
                         key={k}
-                        onClick={() => setSelectedKarat(k)}
-                        className={`px-4 py-2 text-sm rounded-sm transition-all duration-300 ${
-                          selectedKarat === k
-                            ? 'bg-gold text-obsidian font-semibold'
-                            : 'border border-gold/20 text-cream/60 hover:border-gold/50'
+                        onClick={() => setKarat(k)}
+                        className={`px-4 py-2 rounded-sm text-sm font-medium transition-all ${
+                          karat === k
+                            ? 'bg-gold text-obsidian'
+                            : 'border border-cream/20 text-cream/70 hover:border-gold/50'
                         }`}
+                        aria-label={`Select ${k} gold`}
                       >
                         {k}
                       </button>
@@ -133,45 +123,86 @@ export default function ProductViewModal({ product, onClose }) {
                   </div>
                 </div>
 
-                {/* Diamond Size */}
-                <div className="mb-6">
-                  <label className="text-xs text-cream/50 uppercase tracking-wider block mb-3">Diamond</label>
+                {/* Diamond */}
+                <div>
+                  <label className="text-xs uppercase tracking-widest text-cream/50 mb-2 block">
+                    Diamond Size
+                  </label>
                   <div className="flex flex-wrap gap-2">
-                    {DIAMOND_SIZES.map(s => (
+                    {DIAMOND_SIZES.map((d) => (
                       <button
-                        key={s}
-                        onClick={() => setSelectedSize(s)}
-                        className={`px-3 py-2 text-xs rounded-sm transition-all duration-300 ${
-                          selectedSize === s
-                            ? 'bg-gold text-obsidian font-semibold'
-                            : 'border border-gold/20 text-cream/60 hover:border-gold/50'
+                        key={d}
+                        onClick={() => setDiamond(d)}
+                        className={`px-4 py-2 rounded-sm text-sm font-medium transition-all ${
+                          diamond === d
+                            ? 'bg-gold text-obsidian'
+                            : 'border border-cream/20 text-cream/70 hover:border-gold/50'
                         }`}
+                        aria-label={`Select ${d} diamond`}
                       >
-                        {s}
+                        {d}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Quantity & Add */}
-                <div className="mt-auto flex items-center gap-4">
-                  <div className="flex items-center border border-gold/20 rounded-sm">
+                {/* Metal Color */}
+                <div>
+                  <label className="text-xs uppercase tracking-widest text-cream/50 mb-2 block">
+                    Metal Color
+                  </label>
+                  <div className="flex gap-3">
+                    {METAL_COLORS.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setMetal(m)}
+                        className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          metal.id === m.id ? 'border-gold scale-110' : 'border-cream/20'
+                        }`}
+                        style={{ backgroundColor: m.hex }}
+                        aria-label={`Select ${m.name}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quantity */}
+                <div>
+                  <label className="text-xs uppercase tracking-widest text-cream/50 mb-2 block">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setQty(q => Math.max(1, q - 1))}
-                      className="p-2 text-cream/60 hover:text-gold transition-colors"
+                      onClick={() => setQty(Math.max(1, qty - 1))}
+                      className="w-9 h-9 rounded-sm border border-cream/20 text-cream flex items-center justify-center hover:border-gold/50 transition-colors"
+                      aria-label="Decrease quantity"
                     >
-                      <Minus size={16} />
+                      −
                     </button>
-                    <span className="px-4 text-cream font-medium">{qty}</span>
+                    <span className="text-cream font-medium w-8 text-center">{qty}</span>
                     <button
-                      onClick={() => setQty(q => q + 1)}
-                      className="p-2 text-cream/60 hover:text-gold transition-colors"
+                      onClick={() => setQty(qty + 1)}
+                      className="w-9 h-9 rounded-sm border border-cream/20 text-cream flex items-center justify-center hover:border-gold/50 transition-colors"
+                      aria-label="Increase quantity"
                     >
-                      <Plus size={16} />
+                      +
                     </button>
                   </div>
-                  <button onClick={handleAdd} className="btn-gold flex-1 flex items-center justify-center gap-2">
-                    <ShoppingBag size={18} />
+                </div>
+
+                {/* Price + CTA */}
+                <div className="mt-auto pt-4 border-t border-cream/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-cream/50 text-sm">Total</span>
+                    <span className="text-gold font-serif text-2xl">
+                      {formatPrice(calculatedPrice * qty)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleAddToCart}
+                    className="btn-gold w-full text-center"
+                    aria-label="Add to cart"
+                  >
                     Add to Cart
                   </button>
                 </div>

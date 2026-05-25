@@ -1,53 +1,64 @@
 import { motion } from 'framer-motion';
 import { CATEGORIES } from '../../data/products.js';
 
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
 export default function CategoryGrid() {
   return (
-    <section id="collections" className="section bg-obsidian">
+    <section className="section" id="collections" aria-label="Collections">
       <div className="container-luxe">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
-        >
-          <span className="eyebrow justify-center">The Collections</span>
-          <h2 className="h-display mt-4 text-cream">
-            Explore by <span className="text-gold-gradient">Category</span>
+        <div className="text-center mb-12 md:mb-16">
+          <p className="eyebrow justify-center mb-3">Collections</p>
+          <h2 className="h-display text-cream">
+            Curated <span className="text-gold-gradient">Categories</span>
           </h2>
-        </motion.div>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {CATEGORIES.map((cat, i) => (
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.2 }}
+        >
+          {CATEGORIES.map((cat, idx) => (
             <motion.a
               key={cat.id}
               href={`#${cat.id}`}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.12, duration: 0.7 }}
-              whileHover={{ y: -8 }}
-              className="group relative aspect-[3/4] rounded-sm overflow-hidden cursor-pointer"
+              variants={item}
+              className="group relative aspect-[3/4] rounded-lg overflow-hidden block"
+              aria-label={`View ${cat.name} collection`}
             >
               <img
                 src={cat.image}
                 alt={cat.name}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian/90 via-obsidian/30 to-transparent" />
-              <div className="absolute inset-0 border border-gold/0 group-hover:border-gold/30 transition-all duration-500 rounded-sm" />
+              <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/40 to-transparent" />
 
-              <div className="absolute bottom-6 left-6 right-6">
-                <h3 className="font-serif text-2xl text-cream group-hover:text-gold transition-colors duration-300">
-                  {cat.name}
-                </h3>
-                <p className="text-sm text-cream/50 mt-1 font-light">{cat.tagline}</p>
+              <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                <span className="text-gold/60 text-xs font-mono mb-1">
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <h3 className="text-cream font-serif text-xl sm:text-2xl mb-1">{cat.name}</h3>
+                <p className="text-cream/50 text-sm">{cat.tagline}</p>
+                <div className="mt-3 w-8 h-8 rounded-full border border-cream/20 flex items-center justify-center group-hover:bg-gold group-hover:border-gold transition-all duration-300">
+                  <span className="text-cream group-hover:text-obsidian text-sm transition-colors">
+                    →
+                  </span>
+                </div>
               </div>
             </motion.a>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

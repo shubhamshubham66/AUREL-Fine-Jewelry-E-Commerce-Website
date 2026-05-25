@@ -1,7 +1,7 @@
 {
   "name": "aurel-fine-jewelry",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,10 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.105.0",
+    "@react-three/fiber": "^8.16.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.400.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "react-icons": "^5.2.0",
+    "three": "^0.165.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.0",

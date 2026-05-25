@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { FiX, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext.jsx';
 import { formatPrice } from '../../utils/format.js';
 
@@ -9,101 +9,125 @@ export default function CartDrawer() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <motion.div
+          className="fixed inset-0 z-[75] flex justify-end"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div
+            className="absolute inset-0 bg-obsidian/60 backdrop-blur-sm"
             onClick={close}
-            className="fixed inset-0 z-[70] bg-obsidian/80 backdrop-blur-sm"
+            aria-label="Close cart drawer backdrop"
           />
           <motion.aside
+            className="relative w-full max-w-md h-full glass-strong flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed top-0 right-0 bottom-0 z-[75] w-full max-w-md glass-strong border-l border-gold/10 flex flex-col"
+            aria-label="Shopping cart"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gold/10">
-              <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-gold" />
-                <h2 className="font-serif text-xl text-cream">Your Cart</h2>
-                <span className="text-sm text-cream/50">({totals.count})</span>
-              </div>
-              <button onClick={close} className="p-2 text-cream/60 hover:text-gold transition-colors">
-                <X size={22} />
+            <div className="flex items-center justify-between p-6 border-b border-cream/10">
+              <h2 className="font-serif text-xl text-cream">Shopping Cart</h2>
+              <button
+                onClick={close}
+                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-cream/5 text-cream/60 hover:text-gold transition-colors"
+                aria-label="Close cart"
+              >
+                <FiX className="text-lg" />
               </button>
             </div>
 
             {/* Items */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <ShoppingBag size={48} className="text-gold/20 mb-4" />
-                  <p className="text-cream/50 font-serif text-lg">Your cart is empty</p>
-                  <p className="text-cream/30 text-sm mt-2">Discover our collection and add pieces you love.</p>
-                </div>
-              ) : (
-                <AnimatePresence>
-                  {items.map(item => (
-                    <motion.div
-                      key={item.productId}
-                      layout
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="flex gap-4 p-4 glass rounded-sm"
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-20 h-20 object-cover rounded-sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-serif text-sm text-cream truncate">{item.name}</h4>
-                        <p className="text-gold text-sm font-semibold mt-1">{formatPrice(item.price)}</p>
-                        <div className="flex items-center gap-2 mt-2">
+            {items.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+                <FiShoppingBag className="text-4xl text-cream/20 mb-4" />
+                <p className="text-cream/50 font-serif text-lg">Your cart is empty</p>
+                <p className="text-cream/30 text-sm mt-1">
+                  Discover our collection and add your favorites
+                </p>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {items.map((item, idx) => (
+                  <div
+                    key={`${item.productId}-${idx}`}
+                    className="flex gap-4 p-3 rounded-lg bg-onyx/40 border border-cream/5"
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-20 h-20 rounded-md object-cover flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-cream text-sm font-medium truncate">{item.name}</h3>
+                      {item.config && (
+                        <div className="text-cream/40 text-xs mt-0.5 space-x-2">
+                          <span>{item.config.karat}</span>
+                          <span>·</span>
+                          <span>{item.config.diamond}</span>
+                          <span>·</span>
+                          <span>{item.config.metal}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => updateQty(item.productId, item.qty - 1)}
-                            className="p-1 text-cream/40 hover:text-gold transition-colors"
+                            onClick={() => updateQty(idx, item.qty - 1)}
+                            className="w-6 h-6 rounded border border-cream/20 text-cream text-xs flex items-center justify-center hover:border-gold/50 transition-colors"
+                            aria-label="Decrease item quantity"
                           >
-                            <Minus size={14} />
+                            −
                           </button>
-                          <span className="text-sm text-cream w-6 text-center">{item.qty}</span>
+                          <span className="text-cream text-sm w-5 text-center">{item.qty}</span>
                           <button
-                            onClick={() => updateQty(item.productId, item.qty + 1)}
-                            className="p-1 text-cream/40 hover:text-gold transition-colors"
+                            onClick={() => updateQty(idx, item.qty + 1)}
+                            className="w-6 h-6 rounded border border-cream/20 text-cream text-xs flex items-center justify-center hover:border-gold/50 transition-colors"
+                            aria-label="Increase item quantity"
                           >
-                            <Plus size={14} />
+                            +
                           </button>
                         </div>
+                        <span className="text-gold text-sm font-medium">
+                          {formatPrice(item.price * item.qty)}
+                        </span>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.productId)}
-                        className="p-2 text-cream/30 hover:text-rosegold transition-colors self-start"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-            </div>
+                    </div>
+                    <button
+                      onClick={() => removeItem(idx)}
+                      className="self-start text-cream/30 hover:text-red-400 transition-colors"
+                      aria-label={`Remove ${item.name} from cart`}
+                    >
+                      <FiX className="text-sm" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="p-6 border-t border-gold/10 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-cream/60">Subtotal</span>
-                  <span className="text-xl font-serif text-gold">{formatPrice(totals.subtotal)}</span>
+              <div className="p-6 border-t border-cream/10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-cream/60 text-sm">
+                    Subtotal ({totals.count} item{totals.count !== 1 ? 's' : ''})
+                  </span>
+                  <span className="text-gold font-serif text-xl">
+                    {formatPrice(totals.subtotal)}
+                  </span>
                 </div>
-                <button className="btn-gold w-full text-center">Proceed to Checkout</button>
-                <button onClick={close} className="btn-outline-gold w-full text-center">Continue Shopping</button>
+                <button
+                  className="btn-gold w-full text-center"
+                  aria-label="Proceed to checkout"
+                >
+                  Proceed to Checkout
+                </button>
               </div>
             )}
           </motion.aside>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

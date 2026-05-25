@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CartProvider } from './context/CartContext.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
 import LoadingScreen from './components/effects/LoadingScreen.jsx';
 import MouseGlow from './components/effects/MouseGlow.jsx';
 import Navbar from './components/layout/Navbar.jsx';
@@ -16,39 +17,49 @@ import Newsletter from './components/sections/Newsletter.jsx';
 import ProductViewModal from './components/ui/ProductViewModal.jsx';
 import CartDrawer from './components/ui/CartDrawer.jsx';
 import SearchOverlay from './components/ui/SearchOverlay.jsx';
+import AuthModal from './components/ui/AuthModal.jsx';
 
 export default function App() {
   const [activeProduct, setActiveProduct] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   useEffect(() => {
-    const handleKey = (e) => { if (e.key === 'Escape') setSearchOpen(false); };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setSearchOpen(false);
+    };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, []);
 
   return (
-    <CartProvider>
-      <LoadingScreen />
-      <MouseGlow />
-      <div className="relative min-h-screen overflow-x-hidden bg-obsidian text-cream">
-        <Navbar onSearchOpen={() => setSearchOpen(true)} />
-        <main>
-          <Hero />
-          <Marquee />
-          <CategoryGrid />
-          <ProductGrid onView3D={setActiveProduct} />
-          <BrandStory />
-          <Craftsmanship />
-          <Testimonials />
-          <InstagramGallery />
-          <Newsletter />
-        </main>
-        <Footer />
-        <ProductViewModal product={activeProduct} onClose={() => setActiveProduct(null)} />
-        <CartDrawer />
-        <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-      </div>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <LoadingScreen />
+        <MouseGlow />
+        <div className="relative min-h-screen overflow-x-hidden bg-obsidian text-cream">
+          <Navbar
+            onSearchOpen={() => setSearchOpen(true)}
+            onAuthOpen={() => setAuthModalOpen(true)}
+          />
+          <main>
+            <Hero />
+            <Marquee />
+            <CategoryGrid />
+            <ProductGrid onView3D={setActiveProduct} />
+            <BrandStory />
+            <Craftsmanship />
+            <Testimonials />
+            <InstagramGallery />
+            <Newsletter />
+          </main>
+          <Footer />
+          <ProductViewModal product={activeProduct} onClose={() => setActiveProduct(null)} />
+          <CartDrawer />
+          <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+          <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+        </div>
+      </CartProvider>
+    </AuthProvider>
   );
 }
