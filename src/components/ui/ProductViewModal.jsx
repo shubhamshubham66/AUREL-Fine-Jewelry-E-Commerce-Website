@@ -1,10 +1,9 @@
-import { useState, useEffect, Suspense, lazy } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext.jsx';
 import { formatPrice } from '../../utils/format.js';
 import { KARATS, DIAMOND_SIZES, METAL_COLORS } from '../../data/products.js';
-
-const JewelryViewer3D = lazy(() => import('./JewelryViewer3D.jsx'));
+import JewelryViewer3D from './JewelryViewer3D.jsx';
 
 const KARAT_MULTIPLIER = { '14K': 1.0, '18K': 1.3, '22K': 1.7 };
 const DIAMOND_MULTIPLIER = { '0.25 ct': 1.0, '0.50 ct': 1.4, '0.75 ct': 1.8, '1.00 ct': 2.3 };
@@ -79,16 +78,7 @@ export default function ProductViewModal({ product, onClose }) {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
                 </div>
-                <Suspense
-                  fallback={
-                    <div className="flex flex-col items-center justify-center w-full h-full gap-3">
-                      <div className="w-14 h-14 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
-                      <span className="text-[10px] uppercase tracking-widest text-cream/40">Loading 3D View</span>
-                    </div>
-                  }
-                >
-                  <JewelryViewer3D metalColor={metal.hex} />
-                </Suspense>
+                <JewelryViewer3D metalColor={metal.hex} image={product.image} />
               </div>
 
               {/* Configurator */}

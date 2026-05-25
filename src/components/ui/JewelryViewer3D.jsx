@@ -1,212 +1,235 @@
-import { useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, ContactShadows } from '@react-three/drei';
-import * as THREE from 'three';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
-// Gold ring with diamond gems - auto-rotates and supports drag
-function Ring({ metalColor = '#D4AF37' }) {
-  const groupRef = useRef();
-  const [hovered, setHovered] = useState(false);
+/**
+ * CSS 3D Jewelry Viewer - Pure CSS transforms with drag interaction.
+ * No WebGL, no Three.js - uses perspective, rotateY, rotateX for 3D effect.
+ */
+export default function JewelryViewer3D({ metalColor = '#D4AF37', image }) {
+  const containerRef = useRef(null);
+  const animationRef = useRef(null);
+  const rotationRef = useRef({ x: -15, y: 0 });
+  const velocityRef = useRef({ x: 0, y: 0.4 });
+  const isDraggingRef = useRef(false);
+  const lastPointerRef = useRef({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState({ x: -15, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
-  useFrame((state) => {
-    if (groupRef.current) {
-      // Smooth auto-rotation
-      groupRef.current.rotation.y += 0.008;
-      // Gentle floating motion
-      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * 0.05;
-    }
-  });
+  // Animation loop - auto-rotate when not dragging
+  useEffect(() => {
+    const animate = () => {
+      if (!isDraggingRef.current) {
+        // Apply velocity with damping
+        velocityRef.current.y *= 0.995;
+        if (Math.abs(velocityRef.current.y) < 0.3) {
+          velocityRef.current.y = 0.4; // Maintain minimum auto-rotation
+        }
+        velocityRef.current.x *= 0.95;
 
-  // Create gem positions around the ring
-  const gemPositions = [];
-  const gemCount = 16;
-  for (let i = 0; i < gemCount; i++) {
-    const angle = (i / gemCount) * Math.PI * 2;
-    const radius = 1.0;
-    gemPositions.push({
-      position: [Math.cos(angle) * radius, Math.sin(angle) * radius, 0],
-      scale: i % 4 === 0 ? 0.08 : 0.05, // Larger gems at cardinal points
-    });
+        rotationRef.current.x += velocityRef.current.x;
+        rotationRef.current.y += velocityRef.current.y;
+
+        // Clamp X rotation
+        rotationRef.current.x = Math.max(-40, Math.min(40, rotationRef.current.x));
+
+        setRotation({ ...rotationRef.current });
+      }
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  const handlePointerDown = useCallback((e) => {
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    velocityRef.current = { x: 0, y: 0 };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!isDraggingRef.current) return;
+
+    const deltaX = e.clientX - lastPointerRef.current.x;
+    const deltaY = e.clientY - lastPointerRef.current.y;
+
+    rotationRef.current.y += deltaX * 0.5;
+    rotationRef.current.x += deltaY * 0.3;
+    rotationRef.current.x = Math.max(-40, Math.min(40, rotationRef.current.x));
+
+    velocityRef.current = { x: deltaY * 0.1, y: deltaX * 0.2 };
+
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    setRotation({ ...rotationRef.current });
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    isDraggingRef.current = false;
+    setIsDragging(false);
+  }, []);
+
+  // Generate face data for the 6-sided gem shape
+  const faces = [];
+  const faceCount = 6;
+  for (let i = 0; i < faceCount; i++) {
+    const angle = (i / faceCount) * 360;
+    faces.push({ angle, index: i });
   }
 
-  return (
-    <group
-      ref={groupRef}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      {/* Main ring band */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[1, 0.18, 48, 128]} />
-        <meshPhysicalMaterial
-          color={metalColor}
-          metalness={1.0}
-          roughness={0.08}
-          clearcoat={0.3}
-          clearcoatRoughness={0.1}
-          reflectivity={1}
-          envMapIntensity={2.0}
-        />
-      </mesh>
+  // Determine gradient based on metal color
+  const getGradient = (faceIndex) => {
+    const gradients = [
+      `linear-gradient(135deg, ${metalColor}33 0%, ${metalColor}11 50%, transparent 100%)`,
+      `linear-gradient(225deg, ${metalColor}22 0%, ${metalColor}0a 60%, transparent 100%)`,
+      `linear-gradient(45deg, ${metalColor}44 0%, ${metalColor}11 40%, transparent 100%)`,
+      `linear-gradient(315deg, ${metalColor}33 0%, transparent 60%)`,
+      `linear-gradient(180deg, ${metalColor}22 0%, ${metalColor}0a 50%, transparent 100%)`,
+      `linear-gradient(0deg, ${metalColor}44 0%, ${metalColor}11 50%, transparent 100%)`,
+    ];
+    return gradients[faceIndex % gradients.length];
+  };
 
-      {/* Inner ring detail - slightly darker */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.85, 0.02, 32, 128]} />
-        <meshPhysicalMaterial
-          color={metalColor}
-          metalness={1.0}
-          roughness={0.15}
-          envMapIntensity={1.5}
-        />
-      </mesh>
-
-      {/* Diamond gems */}
-      {gemPositions.map((gem, idx) => (
-        <mesh key={idx} position={gem.position} scale={gem.scale} castShadow>
-          <octahedronGeometry args={[1, 2]} />
-          <meshPhysicalMaterial
-            color="#ffffff"
-            metalness={0.0}
-            roughness={0.0}
-            transmission={0.9}
-            thickness={0.5}
-            ior={2.42}
-            envMapIntensity={3}
-            clearcoat={1}
-          />
-        </mesh>
-      ))}
-
-      {/* Center gem (larger, main diamond) */}
-      <mesh position={[0, 1.15, 0]} scale={0.15} castShadow>
-        <octahedronGeometry args={[1, 3]} />
-        <meshPhysicalMaterial
-          color="#f8f8ff"
-          metalness={0.0}
-          roughness={0.0}
-          transmission={0.95}
-          thickness={1}
-          ior={2.42}
-          envMapIntensity={4}
-          clearcoat={1}
-          clearcoatRoughness={0}
-          attenuationColor={new THREE.Color('#ffd700')}
-          attenuationDistance={0.5}
-        />
-      </mesh>
-
-      {/* Prong setting for center diamond */}
-      {[0, 90, 180, 270].map((deg, i) => {
-        const rad = (deg * Math.PI) / 180;
-        return (
-          <mesh
-            key={`prong-${i}`}
-            position={[Math.cos(rad) * 0.08, 1.05, Math.sin(rad) * 0.08]}
-            scale={[0.02, 0.12, 0.02]}
-          >
-            <cylinderGeometry args={[1, 0.5, 1, 8]} />
-            <meshPhysicalMaterial
-              color={metalColor}
-              metalness={1.0}
-              roughness={0.05}
-              envMapIntensity={2}
-            />
-          </mesh>
-        );
-      })}
-    </group>
-  );
-}
-
-// Scene with premium lighting setup
-function Scene({ metalColor }) {
-  return (
-    <>
-      {/* Ambient fill */}
-      <ambientLight intensity={0.3} color="#fff8e7" />
-
-      {/* Key light - warm gold */}
-      <directionalLight
-        position={[5, 8, 5]}
-        intensity={1.5}
-        color="#fff5d4"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-
-      {/* Rim light - cool accent */}
-      <pointLight position={[-4, 3, -3]} intensity={0.8} color="#e0e0ff" />
-
-      {/* Gold accent spotlight */}
-      <spotLight
-        position={[0, 6, 2]}
-        angle={0.3}
-        penumbra={0.8}
-        intensity={2}
-        color="#D4AF37"
-        castShadow
-      />
-
-      {/* Bottom fill */}
-      <pointLight position={[0, -3, 2]} intensity={0.3} color="#D4AF37" />
-
-      {/* The ring */}
-      <Ring metalColor={metalColor} />
-
-      {/* Floor shadow */}
-      <ContactShadows
-        position={[0, -1.8, 0]}
-        opacity={0.5}
-        scale={8}
-        blur={2.5}
-        far={4}
-        color="#000000"
-      />
-
-      {/* Orbit controls - allows drag rotation */}
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        minPolarAngle={Math.PI / 4}
-        maxPolarAngle={Math.PI / 1.5}
-        rotateSpeed={0.5}
-        dampingFactor={0.05}
-        enableDamping
-      />
-    </>
-  );
-}
-
-export default function JewelryViewer3D({ metalColor = '#D4AF37' }) {
   return (
     <div
-      className="w-full h-full min-h-[280px] relative"
+      ref={containerRef}
+      className="w-full h-full min-h-[280px] relative select-none overflow-hidden"
       style={{ minHeight: '280px' }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       aria-label="Interactive 3D jewelry viewer - drag to rotate"
       role="img"
     >
-      <Canvas
-        camera={{ position: [0, 1, 4.5], fov: 40 }}
-        style={{ width: '100%', height: '100%' }}
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: 'high-performance',
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
+      {/* Gold radial glow background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${metalColor}25 0%, transparent 70%)`,
         }}
-        dpr={[1, 2]}
-        shadows
-      >
-        <Scene metalColor={metalColor} />
-      </Canvas>
+      />
 
-      {/* Hint text */}
+      {/* Perspective container */}
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        style={{ perspective: '1200px' }}
+      >
+        {/* 3D rotating gem */}
+        <div
+          className="relative"
+          style={{
+            width: '240px',
+            height: '240px',
+            transformStyle: 'preserve-3d',
+            transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+            transition: isDragging ? 'none' : 'transform 0.05s linear',
+          }}
+        >
+          {/* Six faces of the gem */}
+          {faces.map(({ angle, index }) => (
+            <div
+              key={index}
+              className="absolute inset-0 rounded-lg overflow-hidden"
+              style={{
+                transform: `rotateY(${angle}deg) translateZ(120px)`,
+                backfaceVisibility: 'hidden',
+              }}
+            >
+              {/* Product image on face */}
+              {image && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-70"
+                  style={{ backgroundImage: `url(${image})` }}
+                />
+              )}
+
+              {/* Gold gradient overlay */}
+              <div
+                className="absolute inset-0"
+                style={{ background: getGradient(index) }}
+              />
+
+              {/* Metallic edge highlight */}
+              <div
+                className="absolute inset-0 rounded-lg"
+                style={{
+                  border: `1px solid ${metalColor}44`,
+                  boxShadow: `inset 0 0 30px ${metalColor}15`,
+                }}
+              />
+
+              {/* Shine sweep animation */}
+              <div
+                className="absolute inset-0 overflow-hidden pointer-events-none"
+              >
+                <div
+                  className="absolute top-0 -left-full w-1/2 h-full skew-x-[-20deg]"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${metalColor}40, transparent)`,
+                    animation: `shineSweep 3s ease-in-out infinite`,
+                    animationDelay: `${index * 0.5}s`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* Center gem sparkle */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '40px',
+              height: '40px',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%) translateZ(130px)',
+              background: `radial-gradient(circle, white 0%, ${metalColor}88 40%, transparent 70%)`,
+              boxShadow: `0 0 30px ${metalColor}66, 0 0 60px ${metalColor}33`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Reflective gold floor */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-1/3 pointer-events-none"
+        style={{
+          background: `linear-gradient(to top, ${metalColor}12 0%, ${metalColor}08 30%, transparent 100%)`,
+          maskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, black 0%, transparent 100%)',
+        }}
+      />
+
+      {/* Reflective floor line */}
+      <div
+        className="absolute bottom-[28%] left-1/2 -translate-x-1/2 pointer-events-none"
+        style={{
+          width: '200px',
+          height: '1px',
+          background: `linear-gradient(90deg, transparent, ${metalColor}44, transparent)`,
+        }}
+      />
+
+      {/* Drag hint text */}
       <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
         <span className="text-[10px] uppercase tracking-widest text-cream/40">
           Drag to rotate
         </span>
       </div>
+
+      {/* Keyframe animation styles */}
+      <style>{`
+        @keyframes shineSweep {
+          0% { left: -100%; }
+          50% { left: 200%; }
+          100% { left: 200%; }
+        }
+      `}</style>
     </div>
   );
 }
