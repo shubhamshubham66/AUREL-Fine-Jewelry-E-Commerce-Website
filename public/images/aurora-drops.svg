@@ -1,0 +1,47 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1200" fill="#0B0B0B"/>
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <g filter="url(#softGlow)">
+    <circle cx="600" cy="545" r="410" fill="#D4AF37" fill-opacity="0.1"/>
+  </g>
+  <g transform="translate(0 8)">
+    <g filter="url(#shadow)">
+      <path d="M420 306C420 246 468 198 528 198C588 198 636 246 636 306C636 366 588 414 528 414C468 414 420 366 420 306Z" stroke="url(#gold)" stroke-width="34"/>
+      <path d="M348 660C348 542 528 392 528 392C528 392 708 542 708 660C708 759 628 840 528 840C428 840 348 759 348 660Z" fill="url(#gold)" stroke="#F8E7A0" stroke-opacity="0.55" stroke-width="8"/>
+      <path d="M493 636C493 577 528 506 528 506C528 506 563 577 563 636C563 676 547 708 528 708C509 708 493 676 493 636Z" fill="url(#diamond)" fill-opacity="0.92"/>
+      <circle cx="528" cy="306" r="54" fill="url(#diamond)"/>
+    </g>
+    <g filter="url(#shadow)">
+      <path d="M564 306C564 246 612 198 672 198C732 198 780 246 780 306C780 366 732 414 672 414C612 414 564 366 564 306Z" stroke="url(#gold)" stroke-width="34"/>
+      <path d="M492 660C492 542 672 392 672 392C672 392 852 542 852 660C852 759 772 840 672 840C572 840 492 759 492 660Z" fill="url(#gold)" stroke="#F8E7A0" stroke-opacity="0.55" stroke-width="8"/>
+      <path d="M637 636C637 577 672 506 672 506C672 506 707 577 707 636C707 676 691 708 672 708C653 708 637 676 637 636Z" fill="url(#diamond)" fill-opacity="0.92"/>
+      <circle cx="672" cy="306" r="54" fill="url(#diamond)"/>
+    </g>
+  </g>
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 460) rotate(90) scale(640)">
+      <stop stop-color="#332716"/>
+      <stop offset="0.42" stop-color="#16100C"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="319" y1="186" x2="859" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF2B8"/>
+      <stop offset="0.22" stop-color="#D4AF37"/>
+      <stop offset="0.55" stop-color="#A87918"/>
+      <stop offset="0.78" stop-color="#F4D775"/>
+      <stop offset="1" stop-color="#8B640D"/>
+    </linearGradient>
+    <radialGradient id="diamond" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(560 520) rotate(90) scale(190)">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.35" stop-color="#DDF1FF"/>
+      <stop offset="0.76" stop-color="#8EB2CA"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </radialGradient>
+    <filter id="softGlow" x="70" y="15" width="1060" height="1060" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+    <filter id="shadow" x="270" y="150" width="660" height="780" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="42" stdDeviation="34" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+</svg>

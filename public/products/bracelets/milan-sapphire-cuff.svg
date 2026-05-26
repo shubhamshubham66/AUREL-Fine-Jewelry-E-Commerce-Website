@@ -1,0 +1,13 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="1200" fill="#FBFAF7"/>
+    <circle cx="600" cy="560" r="430" fill="#C9D0D8" fill-opacity="0.055"/>
+    <ellipse cx="600" cy="905" rx="330" ry="52" fill="#000000" fill-opacity="0.08"/>
+    <g filter="url(#shadow)"><g transform="translate(600 610) rotate(0) scale(1)">
+        <ellipse rx="340" ry="160" fill="none" stroke="#C9D0D8" stroke-width="72"/>
+        <ellipse rx="242" ry="96" fill="none" stroke="#FFFFFF" stroke-opacity="0.32" stroke-width="12"/>
+        <circle cx="305" cy="0" r="24" fill="#174A8B"/><circle cx="264.1377481542538" cy="67.49999999999999" r="24" fill="#174A8B"/><circle cx="152.50000000000003" cy="116.9134295108992" r="24" fill="#174A8B"/><circle cx="1.8675863686997135e-14" cy="135" r="24" fill="#174A8B"/><circle cx="-152.49999999999994" cy="116.91342951089922" r="24" fill="#174A8B"/><circle cx="-264.1377481542538" cy="67.49999999999999" r="24" fill="#174A8B"/><circle cx="-305" cy="1.6532731788489267e-14" r="24" fill="#174A8B"/><circle cx="-264.13774815425376" cy="-67.50000000000001" r="24" fill="#174A8B"/><circle cx="-152.50000000000014" cy="-116.91342951089919" r="24" fill="#174A8B"/><circle cx="-5.6027591060991406e-14" cy="-135" r="24" fill="#174A8B"/><circle cx="152.50000000000003" cy="-116.9134295108992" r="24" fill="#174A8B"/><circle cx="264.1377481542537" cy="-67.50000000000006" r="24" fill="#174A8B"/>
+      </g></g>
+    <text x="600" y="1060" text-anchor="middle" font-family="Georgia, serif" font-size="42" fill="#28221A">Milan Sapphire Cuff</text>
+    <text x="600" y="1110" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" letter-spacing="5" fill="#9A7A2F">STERLING SILVER</text>
+    <defs><filter id="shadow" x="90" y="80" width="1020" height="900" filterUnits="userSpaceOnUse"><feDropShadow dx="0" dy="34" stdDeviation="30" flood-color="#000000" flood-opacity="0.18"/></filter></defs>
+  </svg>

@@ -1,0 +1,47 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="1200" fill="#090909"/>
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+  <g filter="url(#glow)">
+    <circle cx="600" cy="535" r="390" fill="#D4AF37" fill-opacity="0.12"/>
+  </g>
+  <g filter="url(#shadow)">
+    <g transform="translate(372 520)">
+      <circle r="118" fill="url(#gold)"/>
+      <circle r="88" fill="url(#diamond)"/>
+      <path d="M0 -120L24 -42L104 -62L44 -8L104 62L24 42L0 120L-24 42L-104 62L-44 8L-104 -62L-24 -42L0 -120Z" fill="#FFFFFF" fill-opacity="0.42"/>
+      <circle r="142" stroke="url(#gold)" stroke-width="18"/>
+    </g>
+    <g transform="translate(828 520)">
+      <circle r="118" fill="url(#gold)"/>
+      <circle r="88" fill="url(#diamond)"/>
+      <path d="M0 -120L24 -42L104 -62L44 -8L104 62L24 42L0 120L-24 42L-104 62L-44 8L-104 -62L-24 -42L0 -120Z" fill="#FFFFFF" fill-opacity="0.42"/>
+      <circle r="142" stroke="url(#gold)" stroke-width="18"/>
+    </g>
+  </g>
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 460) rotate(90) scale(650)">
+      <stop stop-color="#332716"/>
+      <stop offset="0.48" stop-color="#15100A"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="-130" y1="-130" x2="140" y2="145" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF2B8"/>
+      <stop offset="0.24" stop-color="#D4AF37"/>
+      <stop offset="0.58" stop-color="#9A7017"/>
+      <stop offset="0.82" stop-color="#F7D86A"/>
+      <stop offset="1" stop-color="#8A620B"/>
+    </linearGradient>
+    <radialGradient id="diamond" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(-30 -36) rotate(55) scale(180)">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="0.28" stop-color="#E8F7FF"/>
+      <stop offset="0.62" stop-color="#92B8D2"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </radialGradient>
+    <filter id="glow" x="90" y="25" width="1020" height="1020" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+    <filter id="shadow" x="185" y="325" width="830" height="390" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="42" stdDeviation="36" flood-color="#000000" flood-opacity="0.62"/>
+    </filter>
+  </defs>
+</svg>
