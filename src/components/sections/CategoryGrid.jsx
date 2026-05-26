@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+nimport { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { CATEGORIES } from '../../data/products.js';
 
