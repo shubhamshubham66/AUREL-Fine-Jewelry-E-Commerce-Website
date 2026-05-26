@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AUREL Fine Jewelry — UI Structure Document</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a1a;
+    background: #fff;
+    line-height: 1.55;
+  }
+  .page { padding: 24px 28px; max-width: 880px; margin: 0 auto; }
+
+  /* Cover */
+  .cover {
+    background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #0a0a14 100%);
+    color: #f5e6c8;
+    padding: 90px 50px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(212,175,55,0.18), transparent 60%);
+  }
+  .cover h1 {
+    font-size: 44px; margin: 0 0 8px; letter-spacing: 6px;
+    color: #D4AF37; font-weight: 300; position: relative;
+  }
+  .cover .subtitle {
+    font-size: 13px; letter-spacing: 8px; text-transform: uppercase;
+    color: #f5e6c8aa; margin-top: 16px; position: relative;
+  }
+  .cover .doc-type {
+    margin-top: 60px; padding: 8px 24px; display: inline-block;
+    border: 1px solid #D4AF37; border-radius: 999px;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: #D4AF37; position: relative;
+  }
+  .cover .meta {
+    margin-top: 20px; font-size: 11px; color: #f5e6c855;
+    letter-spacing: 2px; position: relative;
+  }
+
+  /* Section headers */
+  h2.section {
+    font-size: 22px; color: #1a1a1a; margin: 36px 0 6px;
+    border-bottom: 2px solid #D4AF37; padding-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  h2.section .num {
+    color: #D4AF37; font-weight: 700; margin-right: 10px;
+  }
+  h3.sub {
+    font-size: 15px; color: #444; margin: 18px 0 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+  }
+  p { font-size: 13px; color: #333; margin: 8px 0; }
+  ul { font-size: 13px; padding-left: 20px; margin: 6px 0; }
+  li { margin: 4px 0; }
+  code {
+    background: #f4f4f6; padding: 1px 6px; border-radius: 3px;
+    font-family: "SF Mono", Consolas, monospace; font-size: 12px;
+    color: #b76e79;
+  }
+
+  /* Tech badges */
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 18px; }
+  .badge {
+    display: inline-block; padding: 4px 10px; border-radius: 4px;
+    background: #f4f4f6; border: 1px solid #e5e5e5;
+    font-size: 11px; color: #444;
+  }
+  .badge.gold { background: #fdf6e3; border-color: #D4AF37; color: #8b6914; }
+
+  /* Tree */
+  .tree {
+    background: #fafafa; border-left: 3px solid #D4AF37;
+    padding: 14px 18px; border-radius: 4px;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: #333; line-height: 1.7;
+    white-space: pre; overflow-x: auto;
+  }
+
+  /* Component cards */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  .card {
+    border: 1px solid #e5e5e5; border-radius: 6px;
+    padding: 12px 14px; background: #fff;
+    page-break-inside: avoid;
+  }
+  .card .ctitle {
+    font-size: 12px; font-weight: 700; color: #1a1a1a;
+    margin: 0 0 4px; letter-spacing: 0.5px;
+  }
+  .card .ctype {
+    font-size: 9px; color: #D4AF37; text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 700;
+  }
+  .card .cdesc {
+    font-size: 11px; color: #555; margin: 4px 0 0; line-height: 1.45;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+  th {
+    background: #1a1a2e; color: #D4AF37;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  /* Flow diagram */
+  .flow {
+    display: flex; flex-direction: column; gap: 6px;
+    background: #fafafa; padding: 16px; border-radius: 6px;
+    border-left: 3px solid #B76E79;
+  }
+  .flow-step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: #333;
+  }
+  .flow-step .arrow {
+    color: #D4AF37; font-weight: bold; font-size: 14px;
+  }
+  .flow-step .box {
+    background: #fff; border: 1px solid #e5e5e5; padding: 4px 12px;
+    border-radius: 4px; font-family: "SF Mono", Consolas, monospace;
+    font-size: 11px;
+  }
+
+  /* Page break */
+  .page-break { page-break-after: always; }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px; padding-top: 16px; border-top: 1px solid #eee;
+    font-size: 10px; color: #999; text-align: center;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* Print fixes */
+  @media print {
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tree, .card, .flow, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <h1>AUREL</h1>
+    <div class="subtitle">FINE JEWELRY</div>
+    <div class="doc-type">UI Structure Document</div>
+    <div class="meta">React + Vite + Tailwind CSS &nbsp;|&nbsp; Version 2.0.0</div>
+  </div>
+
+  <!-- 1. PROJECT OVERVIEW -->
+  <h2 class="section"><span class="num">01</span>Project Overview</h2>
+  <p>
+    <strong>AUREL</strong> is a premium luxury fine jewelry e-commerce single-page application
+    showcasing fine handcrafted jewelry. The UI follows a modern, minimal, high-end aesthetic
+    with cinematic dark backgrounds, gold accents, and immersive 3D product previews.
+  </p>
+
+  <h3 class="sub">Tech Stack</h3>
+  <div class="badges">
+    <span class="badge gold">React 18.3</span>
+    <span class="badge gold">Vite 5</span>
+    <span class="badge gold">Tailwind CSS 3.4</span>
+    <span class="badge">Framer Motion</span>
+    <span class="badge">Lucide Icons</span>
+    <span class="badge">React Icons</span>
+    <span class="badge">PostCSS</span>
+    <span class="badge">Autoprefixer</span>
+  </div>
+
+  <h3 class="sub">Key Features</h3>
+  <ul>
+    <li>Single-page luxury e-commerce experience</li>
+    <li>Premium 3D Jewelry Viewer (Lenskart-style 360° rotate)</li>
+    <li>Cart drawer, search overlay, auth modal</li>
+    <li>Product configurator (karat, diamond size, metal color, quantity)</li>
+    <li>Animated sections with Framer Motion transitions</li>
+    <li>Mouse glow effect, custom loading screen</li>
+    <li>Fully responsive (mobile, tablet, desktop)</li>
+  </ul>
+
+  <!-- 2. FOLDER STRUCTURE -->
+  <h2 class="section"><span class="num">02</span>Folder Structure</h2>
+  <div class="tree">AUREL-Fine-Jewelry-E-Commerce-Website/
+├── public/
+│   └── favicon.svg
+├── src/
+│   ├── components/
+│   │   ├── effects/
+│   │   │   ├── LoadingScreen.jsx
+│   │   │   └── MouseGlow.jsx
+│   │   ├── layout/
+│   │   │   ├── Navbar.jsx
+│   │   │   └── Footer.jsx
+│   │   ├── sections/
+│   │   │   ├── Hero.jsx
+│   │   │   ├── Marquee.jsx
+│   │   │   ├── CategoryGrid.jsx
+│   │   │   ├── ProductGrid.jsx
+│   │   │   ├── BrandStory.jsx
+│   │   │   ├── Craftsmanship.jsx
+│   │   │   ├── Testimonials.jsx
+│   │   │   ├── InstagramGallery.jsx
+│   │   │   └── Newsletter.jsx
+│   │   └── ui/
+│   │       ├── AuthModal.jsx
+│   │       ├── CartDrawer.jsx
+│   │       ├── JewelryViewer3D.jsx
+│   │       ├── ProductViewModal.jsx
+│   │       └── SearchOverlay.jsx
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── CartContext.jsx
+│   ├── data/
+│   │   └── products.js
+│   ├── utils/
+│   │   └── format.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── index.html
+├── package.json
+├── tailwind.config.js
+├── vite.config.js
+├── postcss.config.js
+└── vercel.json</div>
+
+</div>
+
+<div class="page-break"></div>
+
+<div class="page">
+
+  <!-- 3. UI HIERARCHY -->
+  <h2 class="section"><span class="num">03</span>UI Component Hierarchy</h2>
+  <p>The complete UI tree mounted by <code>App.jsx</code> root component:</p>
+
+  <div class="tree">&lt;App&gt;
+└── &lt;AuthProvider&gt;                              [Context: User Auth]
+    └── &lt;CartProvider&gt;                          [Context: Shopping Cart]
+        ├── &lt;LoadingScreen /&gt;                   [Initial luxury loader]
+        ├── &lt;MouseGlow /&gt;                       [Custom cursor glow effect]
+        │
+        ├── &lt;Navbar&gt;                            [Top sticky navigation]
+        │   ├── Logo
+        │   ├── Nav Links
+        │   ├── Search Icon ─────────► opens SearchOverlay
+        │   ├── User Icon ───────────► opens AuthModal
+        │   └── Cart Icon ───────────► opens CartDrawer
+        │
+        ├── &lt;main&gt;
+        │   ├── &lt;Hero /&gt;                        [Cinematic hero banner]
+        │   ├── &lt;Marquee /&gt;                     [Scrolling brand text]
+        │   ├── &lt;CategoryGrid /&gt;                [4 category tiles]
+        │   ├── &lt;ProductGrid /&gt;                 [Product cards 8x]
+        │   │   └── onView3D ────► opens ProductViewModal
+        │   ├── &lt;BrandStory /&gt;                  [About section]
+        │   ├── &lt;Craftsmanship /&gt;               [Process section]
+        │   ├── &lt;Testimonials /&gt;                [Customer reviews]
+        │   ├── &lt;InstagramGallery /&gt;            [Social grid]
+        │   └── &lt;Newsletter /&gt;                  [Email signup]
+        │
+        ├── &lt;Footer /&gt;                          [Bottom links + brand]
+        │
+        ├── &lt;ProductViewModal /&gt;                [Product configurator]
+        │   ├── &lt;JewelryViewer3D /&gt;             [Premium 3D 360° viewer]
+        │   ├── Karat Selector
+        │   ├── Diamond Size Selector
+        │   ├── Metal Color Picker
+        │   ├── Quantity Stepper
+        │   └── Add to Cart Button
+        │
+        ├── &lt;CartDrawer /&gt;                      [Slide-in cart]
+        ├── &lt;SearchOverlay /&gt;                   [Full-screen search]
+        └── &lt;AuthModal /&gt;                       [Login / Signup]</div>
+
+  <!-- 4. COMPONENT BREAKDOWN -->
+  <h2 class="section"><span class="num">04</span>Component Breakdown</h2>
+
+  <h3 class="sub">Effects</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="ctype">Effect</div>
+      <div class="ctitle">LoadingScreen</div>
+      <div class="cdesc">Initial premium loading animation displayed when the app first mounts.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Effect</div>
+      <div class="ctitle">MouseGlow</div>
+      <div class="cdesc">Custom cursor glow effect that follows the mouse for a luxury feel.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">Layout</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="ctype">Layout</div>
+      <div class="ctitle">Navbar</div>
+      <div class="cdesc">Top navigation with logo, links, search, account, cart triggers.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Layout</div>
+      <div class="ctitle">Footer</div>
+      <div class="cdesc">Bottom footer with brand info, links, copyright, and social icons.</div>
+    </div>
+  </div>
+
+  <h3 class="sub">Sections (Homepage)</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">Hero</div>
+      <div class="cdesc">Full-viewport cinematic hero banner with brand intro and CTA.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">Marquee</div>
+      <div class="cdesc">Continuously scrolling tagline / brand statement text.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">CategoryGrid</div>
+      <div class="cdesc">Four-tile grid: Rings, Necklaces, Earrings, Bracelets.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">ProductGrid</div>
+      <div class="cdesc">8 luxury jewelry products with hover effects and view-3D action.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">BrandStory</div>
+      <div class="cdesc">Editorial section explaining the AUREL heritage and philosophy.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">Craftsmanship</div>
+      <div class="cdesc">Visual storytelling about the manufacturing &amp; artisan process.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">Testimonials</div>
+      <div class="cdesc">Rotating customer testimonial slider with quotes and locations.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">InstagramGallery</div>
+      <div class="cdesc">6-image grid showcasing social media presence.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">Section</div>
+      <div class="ctitle">Newsletter</div>
+      <div class="cdesc">Email subscription form for updates and exclusive offers.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-break"></div>
+
+<div class="page">
+
+  <h3 class="sub">UI Components (Modals &amp; Overlays)</h3>
+  <div class="grid">
+    <div class="card">
+      <div class="ctype">UI</div>
+      <div class="ctitle">JewelryViewer3D</div>
+      <div class="cdesc">Premium Lenskart-style 360° drag rotation viewer with sparkles, glow, parallax, and cinematic lighting. Accepts <code>image</code> &amp; <code>metalColor</code> props.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">UI</div>
+      <div class="ctitle">ProductViewModal</div>
+      <div class="cdesc">Full product configurator: 3D viewer, karat, diamond size, metal, quantity, add-to-cart.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">UI</div>
+      <div class="ctitle">CartDrawer</div>
+      <div class="cdesc">Slide-in cart drawer showing items, total, and checkout CTA.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">UI</div>
+      <div class="ctitle">SearchOverlay</div>
+      <div class="cdesc">Full-screen search overlay with backdrop blur. Closes on ESC.</div>
+    </div>
+    <div class="card">
+      <div class="ctype">UI</div>
+      <div class="ctitle">AuthModal</div>
+      <div class="cdesc">Login &amp; signup modal that toggles between forms with smooth transitions.</div>
+    </div>
+  </div>
+
+  <!-- 5. STATE & DATA FLOW -->
+  <h2 class="section"><span class="num">05</span>State &amp; Data Flow</h2>
+
+  <h3 class="sub">Global Contexts</h3>
+  <table>
+    <thead>
+      <tr><th>Context</th><th>Provides</th><th>Consumed By</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>AuthContext</code></td>
+        <td>user, login, logout, signup</td>
+        <td>Navbar, AuthModal, CartDrawer</td>
+      </tr>
+      <tr>
+        <td><code>CartContext</code></td>
+        <td>items, addItem, removeItem, total</td>
+        <td>ProductViewModal, CartDrawer, Navbar</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Local State (in App.jsx)</h3>
+  <table>
+    <thead>
+      <tr><th>State</th><th>Type</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>activeProduct</code></td><td>Object | null</td><td>Currently opened product modal</td></tr>
+      <tr><td><code>searchOpen</code></td><td>Boolean</td><td>Toggle search overlay</td></tr>
+      <tr><td><code>authModalOpen</code></td><td>Boolean</td><td>Toggle login modal</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Data Sources</h3>
+  <ul>
+    <li><code>src/data/products.js</code> — Static product catalog (8 items), categories, testimonials, gallery images, configurator options (KARATS, DIAMOND_SIZES, METAL_COLORS).</li>
+    <li><code>src/utils/format.js</code> — Helper utilities (e.g. price formatter).</li>
+  </ul>
+
+  <!-- 6. USER FLOW -->
+  <h2 class="section"><span class="num">06</span>Primary User Flow</h2>
+  <div class="flow">
+    <div class="flow-step"><span class="box">Landing</span><span class="arrow">→</span><span>Hero animation + Marquee scroll</span></div>
+    <div class="flow-step"><span class="box">Browse</span><span class="arrow">→</span><span>Scroll through CategoryGrid &amp; ProductGrid</span></div>
+    <div class="flow-step"><span class="box">Click Product</span><span class="arrow">→</span><span>Opens ProductViewModal with JewelryViewer3D</span></div>
+    <div class="flow-step"><span class="box">Configure</span><span class="arrow">→</span><span>Choose Karat / Diamond / Metal / Quantity</span></div>
+    <div class="flow-step"><span class="box">Add to Cart</span><span class="arrow">→</span><span>Item pushed to CartContext, modal closes</span></div>
+    <div class="flow-step"><span class="box">View Cart</span><span class="arrow">→</span><span>CartDrawer slides in from right</span></div>
+    <div class="flow-step"><span class="box">Checkout</span><span class="arrow">→</span><span>(future integration)</span></div>
+  </div>
+
+  <!-- 7. DESIGN TOKENS -->
+  <h2 class="section"><span class="num">07</span>Design Tokens</h2>
+  <table>
+    <thead>
+      <tr><th>Token</th><th>Value</th><th>Usage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>obsidian</code></td><td>#0a0a14</td><td>Primary dark background</td></tr>
+      <tr><td><code>onyx</code></td><td>#1a1a2e</td><td>Secondary dark surface</td></tr>
+      <tr><td><code>gold</code></td><td>#D4AF37</td><td>Primary accent / luxury color</td></tr>
+      <tr><td><code>rose-gold</code></td><td>#B76E79</td><td>Rose gold metal accent</td></tr>
+      <tr><td><code>cream</code></td><td>#f5e6c8</td><td>Primary text on dark backgrounds</td></tr>
+      <tr><td><code>silver</code></td><td>#C0C0C0</td><td>Silver metal accent</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="sub">Typography</h3>
+  <ul>
+    <li><strong>Serif font</strong> — Editorial headlines (luxury feel)</li>
+    <li><strong>Sans-serif</strong> — Body, UI labels (clean &amp; modern)</li>
+    <li>Letter-spacing increased on uppercase labels for premium aesthetic</li>
+  </ul>
+
+  <!-- 8. RESPONSIVE -->
+  <h2 class="section"><span class="num">08</span>Responsive Breakpoints</h2>
+  <table>
+    <thead>
+      <tr><th>Breakpoint</th><th>Width</th><th>Layout</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mobile</td><td>&lt; 640px</td><td>Single column, drawer nav, full-width modals</td></tr>
+      <tr><td>Tablet (md)</td><td>≥ 768px</td><td>2-column product modal, expanded grids</td></tr>
+      <tr><td>Desktop (lg)</td><td>≥ 1024px</td><td>4-column product grid, full nav, side drawer</td></tr>
+      <tr><td>Wide (xl)</td><td>≥ 1280px</td><td>Max-width container, generous spacing</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    AUREL FINE JEWELRY &nbsp;·&nbsp; UI STRUCTURE DOCUMENT &nbsp;·&nbsp; v2.0.0
+  </div>
+
+</div>
+
+</body>
+</html>
