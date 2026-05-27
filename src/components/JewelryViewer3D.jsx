@@ -1,24 +1,22 @@
 // Premium Lenskart-style 3D product viewer.
+// Features: HDR environment, PBR materials, continuous 360 auto-rotate
+// with pause-on-interact + auto-resume, smooth fade/scale transition between
+// products, and a modern gold spinner during model load.
 //
-// Pure GLB pipeline — every product loads its real .glb model from
-// /public via useGLTF, the cloned scene is auto-centred and auto-fit
-// inside Bounds, and the same cinematic studio HDR + PBR material
-// override applies across all products. No image planes, no procedural
-// primitives — only real 3D meshes.
+// The 3D animation system (Canvas, SceneLights, Environment, ContactShadows,
+// OrbitControls, AutoRotateGroup, camera position, fov, frameloop, dpr,
+// toneMapping, color space, pause-on-interact behaviour) is preserved
+// bit-for-bit from the previous implementation. The ONLY thing that
+// changed is what gets rendered INSIDE the rotating group:
 //
-// The 3D animation system is preserved exactly:
-//   - Canvas: shadows, dpr [1,1.8], frameloop="always", ACES tone-map
-//   - Camera: position [0, 0.25, 3.2], fov 32, near 0.1, far 100
-//   - Lighting: SceneLights (key + fill + warm rim + ambient) plus
-//     <Environment preset="studio"> for HDR reflections
-//   - Auto-rotation: AUTO_ROTATE_SPEED rad/s on a self-contained group,
-//     pause-on-interact and auto-resume after RESUME_DELAY_MS
-//   - OrbitControls: damped, no pan, drag to rotate, wheel/pinch to
-//     zoom, polar tilt limits, touch dolly+pan
-//   - ContactShadows under every model
+//   displayMode='photo' (default): product.image is mapped onto a subtly
+//     curved double-sided plane with a gold frame and floating animation —
+//     a real product photograph displayed as a 3D textured object.
+//   displayMode='glb': the legacy procedural .glb pipeline (ProductModel)
+//     with PBR material override (gold / diamond / pearl / dark gem).
 //
-// Behaviour preserved across product switches: smooth fade+scale via
-// AnimatePresence + framer-motion, keyed off the cache key.
+// Both branches mount inside the same AutoRotateGroup, so auto-rotation,
+// drag-to-rotate, zoom, lighting and camera all behave identically.
 
 import {
   Component,
@@ -37,6 +35,7 @@ import {
   Html,
   OrbitControls,
   useGLTF,
+  useTexture,
 } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
@@ -56,8 +55,6 @@ function resolveMetalColor(product, metalColor) {
   return '#D4AF37';
 }
 
-// Resolve the GLB URL with the correct GitHub Pages base prefix.
-// External (https://...) URLs are passed through untouched.
 function resolveModelUrl(product, modelUrl, model) {
   const raw =
     product?.model3D ||
@@ -69,9 +66,13 @@ function resolveModelUrl(product, modelUrl, model) {
   return asset(raw);
 }
 
-// Boundary that swallows model-loading errors (404, malformed GLB, etc.)
-// and resets when the model URL changes so a different product still gets
-// a fresh attempt.
+function resolveImageUrl(product, image) {
+  const raw = product?.image || product?.thumbnail || image || '';
+  // External (https) URLs pass through untouched; local paths get base prefix.
+  return raw ? asset(raw) : '';
+}
+
+// Boundary that swallows model-loading errors and resets when the model changes.
 class ModelErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -85,13 +86,6 @@ class ModelErrorBoundary extends Component {
 
   static getDerivedStateFromError() {
     return { failed: true };
-  }
-
-  componentDidCatch(err) {
-    if (typeof console !== 'undefined') {
-      // eslint-disable-next-line no-console
-      console.warn('[JewelryViewer3D] failed to load .glb', err && err.message ? err.message : err);
-    }
   }
 
   render() {
@@ -118,8 +112,12 @@ function CanvasSpinner() {
 }
 
 // A self-contained pivot that auto-rotates the model and respects a "paused" flag.
-function AutoRotateGroup({ children, paused }) {
+function AutoRotateGroup({ children, paused, onMount }) {
   const ref = useRef();
+
+  useEffect(() => {
+    if (ref.current && onMount) onMount(ref.current);
+  }, [onMount]);
 
   useFrame((_, delta) => {
     if (!ref.current || paused) return;
@@ -130,17 +128,110 @@ function AutoRotateGroup({ children, paused }) {
   return <group ref={ref}>{children}</group>;
 }
 
-// Loads a real .glb, clones the scene (so multiple instances don't share
-// state), and applies physically-correct PBR materials (high metalness
-// for gold, glassy diamond, soft pearl, dark gem).
+// ─────────────────────────────────────────────────────────────────────
+//  PRODUCT PHOTO CARD — real product image as a 3D textured object.
 //
-// Material override is name-based — meshes / materials whose name
-// contains 'diamond' / 'stone' / 'gem' / 'crystal' get the glassy
-// transmission shader, 'pearl' gets sheen, 'onyx' / 'black' gets the
-// dark gem shader, everything else gets the metal shader. This keeps
-// the viewer flexible: any GLB you drop in renders correctly as long
-// as the meshes are sensibly named.
-function ProductModel({ modelUrl, metalColor }) {
+//  The image is mapped onto a slightly convex double-sided plane (so the
+//  back of the plane shows the same photograph during 360° rotation) and
+//  wrapped in a thin gold frame. Subtle vertex displacement gives the
+//  card a curved "depth illusion" — it reads as 3D in HDR studio light.
+//
+//  Resolution is large enough (1000w from Unsplash) that aliasing is
+//  managed by enabling anisotropy on the texture.
+// ─────────────────────────────────────────────────────────────────────
+function ProductPhotoCard({ image, metalColor, planeWidth = 2, planeHeight = 2.4 }) {
+  const texture = useTexture(image);
+
+  // Configure texture once it's loaded — sRGB so colours read correctly,
+  // anisotropy for sharp glancing-angle rendering.
+  useMemo(() => {
+    if (!texture) return;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+    texture.needsUpdate = true;
+  }, [texture]);
+
+  // Convex plane: a flat plane whose vertices bulge slightly toward the
+  // viewer in the centre, giving a card-floating-in-space feel.
+  const curvedGeometry = useMemo(() => {
+    const segments = 32;
+    const geo = new THREE.PlaneGeometry(planeWidth, planeHeight, segments, segments);
+    const positions = geo.attributes.position;
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const y = positions.getY(i);
+      // Distance from centre, normalised. Bulges most near (0,0).
+      const r2 = (x * x) / (planeWidth * planeWidth / 4) +
+                 (y * y) / (planeHeight * planeHeight / 4);
+      // Convex bulge of up to 0.08 units toward camera.
+      positions.setZ(i, 0.08 * (1 - r2));
+    }
+    positions.needsUpdate = true;
+    geo.computeVertexNormals();
+    return geo;
+  }, [planeWidth, planeHeight]);
+
+  // Slight floating bob so the card feels suspended even at slow rotation.
+  const cardRef = useRef();
+  useFrame(({ clock }) => {
+    if (!cardRef.current) return;
+    cardRef.current.position.y = Math.sin(clock.elapsedTime * 0.85) * 0.04;
+  });
+
+  const frameColor = metalColor || '#D4AF37';
+  const frameOuter = Math.max(planeWidth, planeHeight) * 0.58;
+  const frameInner = Math.max(planeWidth, planeHeight) * 0.535;
+
+  return (
+    <Bounds fit clip observe margin={1.05}>
+      <Center>
+        <group ref={cardRef}>
+          {/* Soft dark backplate — gives the photo edges definition */}
+          <mesh position={[0, 0, -0.12]} receiveShadow>
+            <planeGeometry args={[planeWidth + 0.18, planeHeight + 0.18]} />
+            <meshStandardMaterial
+              color="#0d0d18"
+              metalness={0.5}
+              roughness={0.55}
+            />
+          </mesh>
+
+          {/* Gold trim ring — picks up HDR studio reflections beautifully */}
+          <mesh position={[0, 0, -0.06]}>
+            <ringGeometry args={[frameInner, frameOuter, 96]} />
+            <meshPhysicalMaterial
+              color={frameColor}
+              metalness={1}
+              roughness={0.18}
+              clearcoat={1}
+              clearcoatRoughness={0.05}
+              envMapIntensity={2.4}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* The product photograph on a curved double-sided plane */}
+          <mesh geometry={curvedGeometry} castShadow receiveShadow>
+            <meshStandardMaterial
+              map={texture}
+              metalness={0.05}
+              roughness={0.42}
+              envMapIntensity={0.6}
+              emissiveMap={texture}
+              emissive={new THREE.Color('#ffffff')}
+              emissiveIntensity={0.18}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </group>
+      </Center>
+    </Bounds>
+  );
+}
+
+// Loads a .glb, clones the scene, and applies physically-correct materials
+// (high metalness for gold, glassy diamond, soft pearl, dark gem).
+function ProductModel({ product, modelUrl, metalColor }) {
   const { scene } = useGLTF(modelUrl);
   const cloned = useMemo(() => scene.clone(true), [scene]);
 
@@ -207,9 +298,6 @@ function ProductModel({ modelUrl, metalColor }) {
     });
   }, [cloned, materials]);
 
-  // Bounds + Center auto-fit any GLB regardless of its native scale or
-  // origin offset, so a 1mm-scale ring and a 10cm-scale necklace both
-  // sit nicely inside the camera frustum.
   return (
     <Bounds fit clip observe margin={1.1}>
       <Center>
@@ -243,15 +331,29 @@ export default function JewelryViewer3D({
   metalColor,
   modelUrl,
   model,
-  className = '',
-  // image prop kept for backwards compatibility — passed in by some
-  // call-sites but no longer rendered (we always show the real GLB).
-  // eslint-disable-next-line no-unused-vars
   image,
+  // Default 'photo' — show the real product photograph as the 3D object.
+  // Pass 'glb' to use the legacy procedural Three.js model instead.
+  // 'auto' = try GLB, fall back to photo on load failure.
+  displayMode = 'photo',
+  className = '',
 }) {
   const resolvedModel = resolveModelUrl(product, modelUrl, model);
+  const resolvedImage = resolveImageUrl(product, image);
   const resolvedMetal = resolveMetalColor(product, metalColor);
-  const cacheKey = `${product?.id || product?.slug || product?.name || 'item'}-${resolvedModel}`;
+  const cacheKey = `${product?.id || product?.slug || product?.name || 'item'}-${displayMode}-${
+    displayMode === 'glb' ? resolvedModel : resolvedImage
+  }`;
+
+  // Decide what we actually have available. If photo mode is requested but
+  // there's no image, fall through to GLB. If GLB mode is requested but no
+  // model, fall through to photo.
+  const effectiveMode = (() => {
+    if (displayMode === 'glb') return resolvedModel ? 'glb' : (resolvedImage ? 'photo' : 'none');
+    if (displayMode === 'photo') return resolvedImage ? 'photo' : (resolvedModel ? 'glb' : 'none');
+    // 'auto' — prefer GLB but use photo as a graceful fallback.
+    return resolvedModel ? 'auto' : (resolvedImage ? 'photo' : 'none');
+  })();
 
   // Pause auto-rotate when the user is interacting; auto-resume after delay.
   const [paused, setPaused] = useState(false);
@@ -265,12 +367,58 @@ export default function JewelryViewer3D({
 
   useEffect(() => () => resumeTimer.current && clearTimeout(resumeTimer.current), []);
 
-  // Pre-warm the next .glb in the background so switching between
-  // products is instant — drei caches the parsed scene per URL.
+  // Pre-warm the next .glb in the background — only when GLB mode is
+  // expected, so photo-mode visitors don't pay the bandwidth cost.
   useEffect(() => {
-    if (!resolvedModel) return;
-    try { useGLTF.preload(resolvedModel); } catch { /* ignore */ }
-  }, [resolvedModel]);
+    if (effectiveMode !== 'photo' && resolvedModel) {
+      try { useGLTF.preload(resolvedModel); } catch { /* ignore */ }
+    }
+  }, [resolvedModel, effectiveMode]);
+
+  // Pre-warm the photo texture so switching between products is instant.
+  useEffect(() => {
+    if (effectiveMode !== 'glb' && resolvedImage) {
+      try { useTexture.preload(resolvedImage); } catch { /* ignore */ }
+    }
+  }, [resolvedImage, effectiveMode]);
+
+  // Inner content that mounts inside AutoRotateGroup. The dispatch happens
+  // here; everything outside (Canvas, lights, camera, controls) is identical
+  // for every mode.
+  const renderInner = () => {
+    if (effectiveMode === 'photo') {
+      return <ProductPhotoCard image={resolvedImage} metalColor={resolvedMetal} />;
+    }
+    if (effectiveMode === 'glb') {
+      return (
+        <ModelErrorBoundary cacheKey={cacheKey} fallback={null}>
+          <ProductModel
+            product={product}
+            modelUrl={resolvedModel}
+            metalColor={resolvedMetal}
+          />
+        </ModelErrorBoundary>
+      );
+    }
+    if (effectiveMode === 'auto') {
+      // Try GLB; if it fails, fall back to the photo card.
+      const photoFallback = resolvedImage
+        ? <ProductPhotoCard image={resolvedImage} metalColor={resolvedMetal} />
+        : null;
+      return (
+        <ModelErrorBoundary cacheKey={cacheKey} fallback={photoFallback}>
+          <ProductModel
+            product={product}
+            modelUrl={resolvedModel}
+            metalColor={resolvedMetal}
+          />
+        </ModelErrorBoundary>
+      );
+    }
+    return null;
+  };
+
+  const hasContent = effectiveMode !== 'none';
 
   return (
     <div className={`relative h-full w-full overflow-hidden select-none ${className}`}>
@@ -282,12 +430,12 @@ export default function JewelryViewer3D({
         }}
       />
 
-      {!resolvedModel ? (
+      {!hasContent ? (
         <div className="absolute inset-0 grid place-items-center text-[11px] uppercase tracking-[0.24em] text-cream/45">
-          3D model unavailable
+          Product preview unavailable
         </div>
       ) : (
-        // Fade + scale transition between products.
+        // Fade + scale transition between products / modes.
         <AnimatePresence mode="wait">
           <motion.div
             key={cacheKey}
@@ -315,16 +463,13 @@ export default function JewelryViewer3D({
             >
               <SceneLights metalColor={resolvedMetal} />
 
-              {/* HDR studio environment for realistic metallic reflections.
-                  This is what gives gold its glow and diamonds their fire. */}
+              {/* HDR environment map for realistic reflections (Drei built-in studio HDR) */}
               <Environment preset="studio" background={false} environmentIntensity={1.4} />
 
               <Suspense fallback={<CanvasSpinner />}>
-                <ModelErrorBoundary cacheKey={cacheKey} fallback={null}>
-                  <AutoRotateGroup paused={paused}>
-                    <ProductModel modelUrl={resolvedModel} metalColor={resolvedMetal} />
-                  </AutoRotateGroup>
-                </ModelErrorBoundary>
+                <AutoRotateGroup paused={paused}>
+                  {renderInner()}
+                </AutoRotateGroup>
               </Suspense>
 
               <ContactShadows
