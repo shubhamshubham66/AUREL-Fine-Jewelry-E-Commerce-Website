@@ -78,7 +78,12 @@ export default function ProductViewModal({ product, onClose }) {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
                 </div>
-                <JewelryViewer3D metalColor={metal.hex} image={product.image} />
+                <JewelryViewer3D
+                  metalColor={metal.hex}
+                  image={product.image}
+                  category={product.category}
+                  modelPath={product.model}
+                />
               </div>
 
               {/* Configurator */}
