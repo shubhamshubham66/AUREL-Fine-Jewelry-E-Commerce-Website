@@ -8,7 +8,7 @@ import Footer from './components/layout/Footer.jsx';
 import Hero from './components/sections/Hero.jsx';
 import Marquee from './components/sections/Marquee.jsx';
 import CategoryGrid from './components/sections/CategoryGrid.jsx';
-import ProductGrid from './components/sections/ProductGrid.jsx';
+import ProductShowcase from './components/sections/ProductShowcase.jsx';
 import BrandStory from './components/sections/BrandStory.jsx';
 import Craftsmanship from './components/sections/Craftsmanship.jsx';
 import Testimonials from './components/sections/Testimonials.jsx';
@@ -46,7 +46,7 @@ export default function App() {
             <Hero />
             <Marquee />
             <CategoryGrid />
-            <ProductGrid onView3D={setActiveProduct} />
+            <ProductShowcase onView3D={setActiveProduct} />
             <BrandStory />
             <Craftsmanship />
             <Testimonials />
