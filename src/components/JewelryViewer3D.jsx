@@ -23,6 +23,7 @@ import {
 } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
+import { asset } from '../utils/assets.js';
 
 // Time after the last user interaction before auto-rotate resumes.
 const RESUME_DELAY_MS = 1800;
@@ -39,14 +40,14 @@ function resolveMetalColor(product, metalColor) {
 }
 
 function resolveModelUrl(product, modelUrl, model) {
-  return (
+  const raw =
     product?.model3D ||
     product?.model ||
     modelUrl ||
     model ||
     product?.modelUrl ||
-    ''
-  );
+    '';
+  return asset(raw);
 }
 
 // Boundary that swallows model-loading errors and resets when the model changes.

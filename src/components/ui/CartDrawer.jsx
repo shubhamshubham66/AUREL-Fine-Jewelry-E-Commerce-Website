@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiShoppingBag } from 'react-icons/fi';
 import { useCart } from '../../context/CartContext.jsx';
 import { formatPrice } from '../../utils/format.js';
+import { asset } from '../../utils/assets.js';
 
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty, totals } = useCart();
@@ -57,7 +58,7 @@ export default function CartDrawer() {
                     className="flex gap-4 p-3 rounded-lg bg-onyx/40 border border-cream/5"
                   >
                     <img
-                      src={item.image}
+                      src={asset(item.image)}
                       alt={item.name}
                       loading="lazy"
                       decoding="async"
