@@ -132,54 +132,80 @@ function meshNode(geometry, mat, position = [0, 0, 0], rotation = [0, 0, 0], sca
 
 /* ─────────────────────────────────────────────
    ROUND BRILLIANT CUT DIAMOND
-   Topology approximation:
-     - Table:    16-side polygon at +crownH
-     - Crown:    16 trapezoidal facets (cone frustum)
-     - Girdle:   thin 16-side cylinder (highlight band)
-     - Pavilion: 16 triangular facets converging to culet point
-   Total ≈ 96 faceted triangles; cheap but unmistakably a diamond.
+   Topology approximates the GIA "ideal" round brilliant cut:
+     - Table:    32-side polygon at the top
+     - Crown:    32 trapezoidal facets (cone frustum, ~34.5° angle)
+     - Girdle:   thin 32-side cylinder (highlight band, ~3% of diameter)
+     - Pavilion: 32 trapezoidal facets converging to a tiny culet flat
+                 (~4% of girdle radius — never a sharp point on a real
+                 diamond) at the bottom (~40.75° angle)
+   Default proportions follow the Tolkowsky ideal ratios:
+     table = 56% of girdle diameter, crown = 16%, pavilion depth = 43%.
+   Total ≈ 192 faceted triangles per stone — flat-shaded so every
+   facet catches the HDR studio light separately, like the real thing.
 ───────────────────────────────────────────── */
 function brilliantDiamondGeometry({
+  // ── Modern API: specify a girdle radius and the proportions
+  //    flow from there. This gives every stone the same correct
+  //    shape regardless of size.
   girdleRadius = 0.5,
-  tableRadius = 0.32,
-  crownHeight = 0.18,
-  girdleHeight = 0.04,
-  pavilionHeight = 0.55,
-  segments = 16,
+  tableRatio = 0.56,        // Tolkowsky ideal: 53-58%
+  crownRatio = 0.155,       // crown height ≈ 15.5% of girdle diameter
+  girdleRatio = 0.03,       // girdle thickness ≈ 3% of girdle diameter
+  pavilionRatio = 0.435,    // pavilion depth ≈ 43.5% of girdle diameter
+  culetRatio = 0.045,       // culet flat ≈ 4.5% of girdle radius
+  segments = 32,
+  // ── Legacy API: explicit values still win, so older call-sites
+  //    keep their stylised proportions. We just bump segments.
+  tableRadius,
+  crownHeight,
+  girdleHeight,
+  pavilionHeight,
 } = {}) {
-  // Crown: truncated cone (table on top, girdle on bottom).
+  const diameter = girdleRadius * 2;
+  const tableR = tableRadius !== undefined ? tableRadius : girdleRadius * tableRatio;
+  const crownH = crownHeight !== undefined ? crownHeight : diameter * crownRatio;
+  const girdleH = girdleHeight !== undefined ? girdleHeight : diameter * girdleRatio;
+  const pavilionH = pavilionHeight !== undefined ? pavilionHeight : diameter * pavilionRatio;
+  const culetR = girdleRadius * culetRatio;
+
+  // Crown: truncated cone with the table closed on top.
   const crown = new THREE.CylinderGeometry(
-    tableRadius,
+    tableR,
     girdleRadius,
-    crownHeight,
+    crownH,
     segments,
     1,
-    false, // openEnded=false so we get the table cap on top
+    false, // closed → table cap visible on top
   );
-  crown.translate(0, girdleHeight / 2 + crownHeight / 2, 0);
+  crown.translate(0, girdleH / 2 + crownH / 2, 0);
 
-  // Girdle: thin cylinder, no caps (smooth band where crown meets pavilion).
+  // Girdle: thin open cylinder forming a highlight band where the crown
+  // meets the pavilion. No caps — they would z-fight with the cones.
   const girdle = new THREE.CylinderGeometry(
     girdleRadius,
     girdleRadius,
-    girdleHeight,
+    girdleH,
     segments,
     1,
-    true, // openEnded=true
+    true,
   );
 
-  // Pavilion: cone tapering down from girdle to culet point.
-  const pavilion = new THREE.ConeGeometry(
+  // Pavilion: truncated cone tapering to a tiny culet flat (not a needle
+  // point). A real-world brilliant cut never terminates as a perfect
+  // point because that fragile tip would chip off — so neither does ours.
+  const pavilion = new THREE.CylinderGeometry(
     girdleRadius,
-    pavilionHeight,
+    culetR,
+    pavilionH,
     segments,
     1,
-    true, // openEnded=true (no top cap, opens into girdle)
+    false, // closed → tiny culet visible at the bottom
   );
-  pavilion.rotateX(Math.PI); // apex points down
-  pavilion.translate(0, -girdleHeight / 2 - pavilionHeight / 2, 0);
+  pavilion.translate(0, -girdleH / 2 - pavilionH / 2, 0);
 
-  // Merge then *flat* shade so the facets are visible.
+  // Merge and *flat-shade* so each facet reflects light independently —
+  // this is what makes the diamond look faceted rather than smooth.
   const merged = mergeGeometries([crown, girdle, pavilion], false);
   const flat = merged.toNonIndexed();
   flat.computeVertexNormals();
@@ -188,18 +214,14 @@ function brilliantDiamondGeometry({
 
 /**
  * Quick faceted brilliant for accent stones in pavé halos / channel sets.
- * Lower poly than the hero stone but still reads as a real cut.
+ * Bumped to 12 segments — at this size it's the difference between
+ * a faceted micro-diamond and a fuzzy blob in the HDR reflection.
  */
 function accentDiamondGeometry(size = 0.05) {
-  const geo = brilliantDiamondGeometry({
+  return brilliantDiamondGeometry({
     girdleRadius: size,
-    tableRadius: size * 0.6,
-    crownHeight: size * 0.32,
-    girdleHeight: size * 0.06,
-    pavilionHeight: size * 0.95,
-    segments: 8,
+    segments: 16,
   });
-  return geo;
 }
 
 /* ─────────────────────────────────────────────
@@ -318,7 +340,7 @@ function buildRing(product) {
         crownHeight: 0.07 * stoneScale,
         girdleHeight: 0.012 * stoneScale,
         pavilionHeight: 0.21 * stoneScale,
-        segments: 16,
+        segments: 32,
       }),
       mats.gem,
       [0, stoneY, 0],
@@ -475,7 +497,7 @@ function buildNecklace(product) {
         crownHeight: 0.05,
         girdleHeight: 0.01,
         pavilionHeight: 0.16,
-        segments: 16,
+        segments: 32,
       }),
       mats.gem,
       [0, pendantY, 0],
@@ -563,7 +585,7 @@ function buildEarrings(product) {
             crownHeight: 0.05,
             girdleHeight: 0.01,
             pavilionHeight: 0.2,
-            segments: 16,
+            segments: 32,
           }),
           mats.gem,
           [x, -0.18, 0],
@@ -602,7 +624,7 @@ function buildEarrings(product) {
             crownHeight: 0.05 * stoneSize,
             girdleHeight: 0.01 * stoneSize,
             pavilionHeight: 0.16 * stoneSize,
-            segments: 16,
+            segments: 32,
           }),
           mats.gem,
           [x, 0, 0.06],
@@ -688,7 +710,7 @@ function buildBracelet(product) {
             crownHeight: 0.018,
             girdleHeight: 0.005,
             pavilionHeight: 0.07,
-            segments: 12,
+            segments: 16,
           }),
           mats.gem,
           [x, y, 0.16],
@@ -754,7 +776,7 @@ function buildBracelet(product) {
           crownHeight: 0.015,
           girdleHeight: 0.005,
           pavilionHeight: 0.058,
-          segments: 12,
+          segments: 16,
         }),
         mats.gem,
         [x, y, 0.018],
