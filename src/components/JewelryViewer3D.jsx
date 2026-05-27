@@ -1,24 +1,7 @@
 // Premium Lenskart-style 3D product viewer.
-//
-// Pure GLB pipeline — every product loads its real .glb model from
-// /public via useGLTF, the cloned scene is auto-centred and auto-fit
-// inside Bounds, and the same cinematic studio HDR + PBR material
-// override applies across all products. No image planes, no procedural
-// primitives — only real 3D meshes.
-//
-// The 3D animation system is preserved exactly:
-//   - Canvas: shadows, dpr [1,1.8], frameloop="always", ACES tone-map
-//   - Camera: position [0, 0.25, 3.2], fov 32, near 0.1, far 100
-//   - Lighting: SceneLights (key + fill + warm rim + ambient) plus
-//     <Environment preset="studio"> for HDR reflections
-//   - Auto-rotation: AUTO_ROTATE_SPEED rad/s on a self-contained group,
-//     pause-on-interact and auto-resume after RESUME_DELAY_MS
-//   - OrbitControls: damped, no pan, drag to rotate, wheel/pinch to
-//     zoom, polar tilt limits, touch dolly+pan
-//   - ContactShadows under every model
-//
-// Behaviour preserved across product switches: smooth fade+scale via
-// AnimatePresence + framer-motion, keyed off the cache key.
+// Features: HDR environment, PBR materials, continuous 360 auto-rotate
+// with pause-on-interact + auto-resume, smooth fade/scale transition between
+// products, and a modern gold spinner during model load.
 
 import {
   Component,
@@ -56,8 +39,6 @@ function resolveMetalColor(product, metalColor) {
   return '#D4AF37';
 }
 
-// Resolve the GLB URL with the correct GitHub Pages base prefix.
-// External (https://...) URLs are passed through untouched.
 function resolveModelUrl(product, modelUrl, model) {
   const raw =
     product?.model3D ||
@@ -69,9 +50,7 @@ function resolveModelUrl(product, modelUrl, model) {
   return asset(raw);
 }
 
-// Boundary that swallows model-loading errors (404, malformed GLB, etc.)
-// and resets when the model URL changes so a different product still gets
-// a fresh attempt.
+// Boundary that swallows model-loading errors and resets when the model changes.
 class ModelErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -85,13 +64,6 @@ class ModelErrorBoundary extends Component {
 
   static getDerivedStateFromError() {
     return { failed: true };
-  }
-
-  componentDidCatch(err) {
-    if (typeof console !== 'undefined') {
-      // eslint-disable-next-line no-console
-      console.warn('[JewelryViewer3D] failed to load .glb', err && err.message ? err.message : err);
-    }
   }
 
   render() {
@@ -118,8 +90,12 @@ function CanvasSpinner() {
 }
 
 // A self-contained pivot that auto-rotates the model and respects a "paused" flag.
-function AutoRotateGroup({ children, paused }) {
+function AutoRotateGroup({ children, paused, onMount }) {
   const ref = useRef();
+
+  useEffect(() => {
+    if (ref.current && onMount) onMount(ref.current);
+  }, [onMount]);
 
   useFrame((_, delta) => {
     if (!ref.current || paused) return;
@@ -130,17 +106,9 @@ function AutoRotateGroup({ children, paused }) {
   return <group ref={ref}>{children}</group>;
 }
 
-// Loads a real .glb, clones the scene (so multiple instances don't share
-// state), and applies physically-correct PBR materials (high metalness
-// for gold, glassy diamond, soft pearl, dark gem).
-//
-// Material override is name-based — meshes / materials whose name
-// contains 'diamond' / 'stone' / 'gem' / 'crystal' get the glassy
-// transmission shader, 'pearl' gets sheen, 'onyx' / 'black' gets the
-// dark gem shader, everything else gets the metal shader. This keeps
-// the viewer flexible: any GLB you drop in renders correctly as long
-// as the meshes are sensibly named.
-function ProductModel({ modelUrl, metalColor }) {
+// Loads a .glb, clones the scene, and applies physically-correct materials
+// (high metalness for gold, glassy diamond, soft pearl, dark gem).
+function ProductModel({ product, modelUrl, metalColor }) {
   const { scene } = useGLTF(modelUrl);
   const cloned = useMemo(() => scene.clone(true), [scene]);
 
@@ -207,9 +175,6 @@ function ProductModel({ modelUrl, metalColor }) {
     });
   }, [cloned, materials]);
 
-  // Bounds + Center auto-fit any GLB regardless of its native scale or
-  // origin offset, so a 1mm-scale ring and a 10cm-scale necklace both
-  // sit nicely inside the camera frustum.
   return (
     <Bounds fit clip observe margin={1.1}>
       <Center>
@@ -244,10 +209,6 @@ export default function JewelryViewer3D({
   modelUrl,
   model,
   className = '',
-  // image prop kept for backwards compatibility — passed in by some
-  // call-sites but no longer rendered (we always show the real GLB).
-  // eslint-disable-next-line no-unused-vars
-  image,
 }) {
   const resolvedModel = resolveModelUrl(product, modelUrl, model);
   const resolvedMetal = resolveMetalColor(product, metalColor);
@@ -265,11 +226,9 @@ export default function JewelryViewer3D({
 
   useEffect(() => () => resumeTimer.current && clearTimeout(resumeTimer.current), []);
 
-  // Pre-warm the next .glb in the background so switching between
-  // products is instant — drei caches the parsed scene per URL.
+  // Pre-warm the next .glb in the background.
   useEffect(() => {
-    if (!resolvedModel) return;
-    try { useGLTF.preload(resolvedModel); } catch { /* ignore */ }
+    if (resolvedModel) useGLTF.preload(resolvedModel);
   }, [resolvedModel]);
 
   return (
@@ -287,7 +246,7 @@ export default function JewelryViewer3D({
           3D model unavailable
         </div>
       ) : (
-        // Fade + scale transition between products.
+        // Fade + scale transition between product models.
         <AnimatePresence mode="wait">
           <motion.div
             key={cacheKey}
@@ -315,14 +274,17 @@ export default function JewelryViewer3D({
             >
               <SceneLights metalColor={resolvedMetal} />
 
-              {/* HDR studio environment for realistic metallic reflections.
-                  This is what gives gold its glow and diamonds their fire. */}
+              {/* HDR environment map for realistic reflections (Drei built-in studio HDR) */}
               <Environment preset="studio" background={false} environmentIntensity={1.4} />
 
               <Suspense fallback={<CanvasSpinner />}>
                 <ModelErrorBoundary cacheKey={cacheKey} fallback={null}>
                   <AutoRotateGroup paused={paused}>
-                    <ProductModel modelUrl={resolvedModel} metalColor={resolvedMetal} />
+                    <ProductModel
+                      product={product}
+                      modelUrl={resolvedModel}
+                      metalColor={resolvedMetal}
+                    />
                   </AutoRotateGroup>
                 </ModelErrorBoundary>
               </Suspense>
