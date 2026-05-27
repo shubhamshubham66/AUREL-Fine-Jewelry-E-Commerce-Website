@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { PRODUCTS } from '../../data/products.js';
 import { formatPrice } from '../../utils/format.js';
+import { asset } from '../../utils/assets.js';
 
 const POPULAR_SEARCHES = ['Rings', 'Necklaces', 'Diamond', 'Gold', 'Earrings', 'Bracelets'];
 
@@ -112,7 +113,7 @@ export default function SearchOverlay({ isOpen, onClose }) {
                         aria-label={`View ${product.name}`}
                       >
                         <img
-                          src={product.image}
+                          src={asset(product.image)}
                           alt={product.name}
                           loading="lazy"
                           decoding="async"

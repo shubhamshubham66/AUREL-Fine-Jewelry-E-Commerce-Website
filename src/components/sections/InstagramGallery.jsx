@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Instagram } from 'lucide-react';
 import { INSTAGRAM_GALLERY } from '../../data/products.js';
+import { asset } from '../../utils/assets.js';
 
 const containerVariants = {
   hidden: {},
@@ -43,7 +44,7 @@ export default function InstagramGallery() {
               variants={itemVariants}
             >
               <img
-                src={src}
+                src={asset(src)}
                 alt={`Gallery ${i + 1}`}
                 loading="lazy"
                 decoding="async"

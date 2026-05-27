@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { CATEGORIES } from '../../data/products.js';
+import { asset } from '../../utils/assets.js';
 
 const containerVariants = {
   hidden: {},
@@ -47,7 +48,7 @@ export default function CategoryGrid() {
             >
               {/* Image */}
               <img
-                src={cat.image}
+                src={asset(cat.image)}
                 alt={cat.name}
                 loading="lazy"
                 decoding="async"

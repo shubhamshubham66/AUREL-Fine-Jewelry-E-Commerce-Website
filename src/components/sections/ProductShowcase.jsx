@@ -8,6 +8,7 @@ import { Eye, ShoppingBag, Star } from 'lucide-react';
 import { PRODUCTS, METAL_COLORS } from '../../data/products.js';
 import { useCart } from '../../context/CartContext.jsx';
 import { formatPrice } from '../../utils/format.js';
+import { asset } from '../../utils/assets.js';
 
 const JewelryViewer3D = lazy(() => import('../JewelryViewer3D.jsx'));
 
@@ -166,7 +167,7 @@ export default function ProductShowcase({ onView3D }) {
                       {/* Thumbnail */}
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-cream">
                         <img
-                          src={product.thumbnail || product.image}
+                          src={asset(product.thumbnail || product.image)}
                           alt={product.name}
                           loading="lazy"
                           decoding="async"
