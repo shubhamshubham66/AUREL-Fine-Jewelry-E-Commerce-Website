@@ -1,5 +1,7 @@
 // AUREL — curated 10-piece signature collection.
-// Each product ships with a real product photograph and a 3D model.
+// Each product ships with a real product photograph (used both for the 2D
+// thumbnail in cards and as the texture for the 3D viewer's photo card)
+// AND a procedural .glb model for full 3D mode.
 
 export const PRODUCTS = [
   {
